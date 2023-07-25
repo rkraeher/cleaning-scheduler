@@ -1,5 +1,5 @@
 // we loop through entire workbook, separating 'availables' from till '{{date}}'
-const DURATION_CODES = {
+const CLEANING_TIME_IN_MINUTES = {
   Q: 30,
   D: 60,
   O: 120,
@@ -26,50 +26,68 @@ const occupiedRooms = {
   // we just need room numbers, because all durations for occupied rooms will be 15
 };
 
-function getAvailableRooms() {
+function setRoomsMap(availableRooms) {
   let roomsMap = new Map();
-  let totalDuration = 0;
 
-  // availableRooms will come from spreadsheet
-  for (const [room, durationCode] of Object.entries(availableRooms)) {
-    roomsMap.set(room, durationCode[0]);
-    totalDuration += DURATION_CODES[durationCode[0]];
+  for (const [room, cleaningTimeCode] of Object.entries(availableRooms)) {
+    roomsMap.set(room, cleaningTimeCode[0]);
   }
 
-  return [roomsMap, totalDuration];
+  return roomsMap;
 }
 
-const [roomsMap, totalDuration] = getAvailableRooms();
+const roomsMap = setRoomsMap(availableRooms);
 
+function calculateTotalCleaningTime(roomsMap, CLEANING_TIMES) {
+  let totalCleaningTime = 0;
+  for (const cleaningTimeCode of roomsMap.values()) {
+    totalCleaningTime += CLEANING_TIMES[cleaningTimeCode];
+  }
+  return totalCleaningTime;
+}
+
+const totalCleaningTime = calculateTotalCleaningTime(
+  roomsMap,
+  CLEANING_TIME_IN_MINUTES
+);
+
+// should accept parameters instead of referencing global vars?
 function getRoomAssignments() {
+  const TOTAL_CLEANING_TIME_FOR_SINGLE_CLEANER =
+    'totalCleaningTimeForSingleCleaner';
+
   let cleanerA = new Map();
-  cleanerA.set('durationForSingleCleaner', 0);
+  cleanerA.set(TOTAL_CLEANING_TIME_FOR_SINGLE_CLEANER, 0);
 
   let cleanerB = new Map();
-  cleanerB.set('durationForSingleCleaner', 0);
+  cleanerB.set(TOTAL_CLEANING_TIME_FOR_SINGLE_CLEANER, 0);
 
-  for (const [room, durationCode] of roomsMap) {
-    const durationOfRoom = DURATION_CODES[durationCode];
-    const isDurationForSingleCleanerLessThanOrEqualToHalfTheTotalDuration =
-      cleanerA.get('durationForSingleCleaner') <
-        Math.floor(totalDuration / 2) &&
-      cleanerA.get('durationForSingleCleaner') + durationOfRoom <=
-        Math.floor(totalDuration / 2);
+  for (const [room, cleaningTimeCode] of roomsMap) {
+    const cleaningTimeForOneRoom = CLEANING_TIME_IN_MINUTES[cleaningTimeCode];
 
-    if (isDurationForSingleCleanerLessThanOrEqualToHalfTheTotalDuration) {
-      cleanerA.set(room, durationOfRoom);
+    const IS_CLEANING_TIME_FIT_FOR_SINGLE_CLEANER =
+      cleanerA.get(TOTAL_CLEANING_TIME_FOR_SINGLE_CLEANER) <
+        Math.floor(totalCleaningTime / 2) &&
+      cleanerA.get(TOTAL_CLEANING_TIME_FOR_SINGLE_CLEANER) +
+        cleaningTimeForOneRoom <=
+        Math.floor(totalCleaningTime / 2);
+
+    if (IS_CLEANING_TIME_FIT_FOR_SINGLE_CLEANER) {
+      cleanerA.set(room, cleaningTimeForOneRoom);
 
       cleanerA.set(
-        'durationForSingleCleaner',
-        cleanerA.get('durationForSingleCleaner') + durationOfRoom
+        TOTAL_CLEANING_TIME_FOR_SINGLE_CLEANER,
+        cleanerA.get(TOTAL_CLEANING_TIME_FOR_SINGLE_CLEANER) +
+          cleaningTimeForOneRoom
       );
     }
 
     if (!cleanerA.has(room)) {
-      cleanerB.set(room, durationOfRoom);
+      cleanerB.set(room, cleaningTimeForOneRoom);
       cleanerB.set(
-        'durationForSingleCleaner',
-        cleanerB.get('durationForSingleCleaner') + durationOfRoom
+        TOTAL_CLEANING_TIME_FOR_SINGLE_CLEANER,
+        cleanerB.get(TOTAL_CLEANING_TIME_FOR_SINGLE_CLEANER) +
+          cleaningTimeForOneRoom
       );
     }
   }
