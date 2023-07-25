@@ -1,12 +1,12 @@
 // we loop through entire workbook, separating 'availables' from till '{{date}}'
-const CLEANING_TIME_IN_MINUTES = {
+export const CLEANING_TIME_IN_MINUTES = {
   D: 30,
   Q: 60,
   O: 120,
 };
 
 // this data will come from the spreadsheet
-const availableRooms = {
+export const availableRooms = {
   // room# is one column, room key is the next
   101: 'DBS',
   102: 'QDB',
@@ -35,7 +35,7 @@ const totalCleaningTime = calculateTotalCleaningTime(
 
 const [cleanerA, cleanerB] = getRoomAssignments(roomsMap);
 
-function setRoomsMap(availableRooms) {
+export function setRoomsMap(availableRooms) {
   let roomsMap = new Map();
 
   for (const [room, cleaningTimeCode] of Object.entries(availableRooms)) {
@@ -45,7 +45,7 @@ function setRoomsMap(availableRooms) {
   return roomsMap;
 }
 
-function calculateTotalCleaningTime(roomsMap, CLEANING_TIMES) {
+export function calculateTotalCleaningTime(roomsMap, CLEANING_TIMES) {
   let totalCleaningTime = 0;
   for (const cleaningTimeCode of roomsMap.values()) {
     totalCleaningTime += CLEANING_TIMES[cleaningTimeCode];
@@ -53,7 +53,7 @@ function calculateTotalCleaningTime(roomsMap, CLEANING_TIMES) {
   return totalCleaningTime;
 }
 
-function getRoomAssignments(roomsMap) {
+export function getRoomAssignments(roomsMap) {
   const TOTAL_CLEANING_TIME_FOR_SINGLE_CLEANER =
     'totalCleaningTimeForSingleCleaner';
 
