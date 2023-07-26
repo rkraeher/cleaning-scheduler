@@ -1,12 +1,14 @@
-// we loop through entire workbook, distinguishing 'availables' from till '{{date}}'
-export const CLEANING_TIMES_IN_MINUTES = {
+// we loop through entire workbook
+// anything that is 'available' or till ...next day = departure ('Q','D', or 'O' cleaning time)
+// everything that has till ...2 days in future, = occupied (15 mins)
+const CLEANING_TIMES_IN_MINUTES = {
   D: 30,
   Q: 60,
   O: 120,
 };
 
 // this data will come from the spreadsheet
-export const availableRooms = {
+const availableRooms = {
   101: 'DBS',
   102: 'QDB',
   103: 'QDS',
@@ -25,8 +27,7 @@ const occupiedRooms = {
   // we just need room numbers, because all durations for occupied rooms will be 15
 };
 
-const roomsMap = setRoomsMap(availableRooms);
-const [cleanerA, cleanerB] = getRoomAssignments(roomsMap);
+const [cleanerA, cleanerB] = getRoomAssignments(setRoomsMap(availableRooms));
 
 export function setRoomsMap(availableRooms) {
   let roomsMap = new Map();
