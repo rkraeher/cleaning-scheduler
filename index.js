@@ -34,59 +34,52 @@ export function setRoomsMap(availableRooms) {
   for (const [roomNumber, cleaningTimeCodes] of Object.entries(
     availableRooms
   )) {
-    // in the user's system, only the first letter from the codes column is relevant
-    roomsMap.set(roomNumber, cleaningTimeCodes[0]);
+    // only the first letter from the codes column is needed to get the cleaningTimeForOneRoom
+    roomsMap.set(roomNumber, CLEANING_TIMES_IN_MINUTES[cleaningTimeCodes[0]]);
   }
 
   return roomsMap;
 }
 
-export function calculateTotalCleaningTime(roomsMap, CLEANING_TIMES) {
+export function calculateTotalCleaningTime(roomsMap) {
   let totalCleaningTime = 0;
   for (const cleaningTime of roomsMap.values()) {
-    totalCleaningTime += CLEANING_TIMES[cleaningTime];
+    totalCleaningTime += cleaningTime;
   }
   return totalCleaningTime;
 }
 
 export function getRoomAssignments(roomsMap) {
-  const totalCleaningTime = calculateTotalCleaningTime(
-    roomsMap,
-    CLEANING_TIMES_IN_MINUTES
-  );
-  const TOTAL_CLEANING_TIME_FOR_SINGLE_CLEANER =
-    'totalCleaningTimeForSingleCleaner';
+  const TOTAL_CLEANING_TIME_FOR_ONE_CLEANER = 'totalCleaningTimeForOneCleaner';
+  const totalCleaningTime = calculateTotalCleaningTime(roomsMap);
 
-  let cleanerA = new Map();
-  cleanerA.set(TOTAL_CLEANING_TIME_FOR_SINGLE_CLEANER, 0);
-
-  let cleanerB = new Map();
-  cleanerB.set(TOTAL_CLEANING_TIME_FOR_SINGLE_CLEANER, 0);
+  let cleanerA = new Map([[TOTAL_CLEANING_TIME_FOR_ONE_CLEANER, 0]]);
+  let cleanerB = new Map([[TOTAL_CLEANING_TIME_FOR_ONE_CLEANER, 0]]);
 
   function updateCleaner(cleaner, room) {
-    const [roomNumber, cleaningTime] = room;
+    const [roomNumber, cleaningTimeForOneRoom] = room;
 
-    cleaner.set(roomNumber, cleaningTime);
+    cleaner.set(roomNumber, cleaningTimeForOneRoom);
     cleaner.set(
-      TOTAL_CLEANING_TIME_FOR_SINGLE_CLEANER,
-      cleaner.get(TOTAL_CLEANING_TIME_FOR_SINGLE_CLEANER) + cleaningTime
+      TOTAL_CLEANING_TIME_FOR_ONE_CLEANER,
+      cleaner.get(TOTAL_CLEANING_TIME_FOR_ONE_CLEANER) + cleaningTimeForOneRoom
     );
   }
 
-  for (const [roomNumber, cleaningTimeCode] of roomsMap) {
-    const cleaningTimeForOneRoom = CLEANING_TIMES_IN_MINUTES[cleaningTimeCode];
-    const room = [roomNumber, cleaningTimeForOneRoom];
+  for (const room of roomsMap) {
+    const [, cleaningTimeForOneRoom] = room;
+    const totalCleaningTimeForOneCleaner = cleanerA.get(
+      TOTAL_CLEANING_TIME_FOR_ONE_CLEANER
+    );
 
-    const IS_CLEANING_TIME_FIT_FOR_SINGLE_CLEANER =
-      cleanerA.get(TOTAL_CLEANING_TIME_FOR_SINGLE_CLEANER) <
-        Math.floor(totalCleaningTime / 2) &&
-      cleanerA.get(TOTAL_CLEANING_TIME_FOR_SINGLE_CLEANER) +
-        cleaningTimeForOneRoom <=
+    const isCleaningTimeFitForOneCleaner =
+      totalCleaningTimeForOneCleaner < Math.floor(totalCleaningTime / 2) &&
+      totalCleaningTimeForOneCleaner + cleaningTimeForOneRoom <=
         Math.floor(totalCleaningTime / 2);
 
-    if (IS_CLEANING_TIME_FIT_FOR_SINGLE_CLEANER) {
+    if (isCleaningTimeFitForOneCleaner) {
       updateCleaner(cleanerA, room);
-    } else if (!cleanerA.has(roomNumber)) {
+    } else if (!cleanerA.has(room)) {
       updateCleaner(cleanerB, room);
     }
   }
