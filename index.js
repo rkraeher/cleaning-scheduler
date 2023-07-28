@@ -46,25 +46,23 @@ export function sumTotalCleaningTime(cleaner) {
 }
 
 function getClosestSumDifference(roomsMap) {
-  const totalSum = sumTotalCleaningTime(roomsMap);
-  const possibleSums = new Set();
+  function calculatePossibleSums(start, currentSum, possibleSums) {
+    if (start === roomsMap.size) {
+      possibleSums.add(currentSum);
+      return;
+    }
 
-  for (const [, cleaningTime] of roomsMap) {
-    const newPossibleSums = new Set();
-    for (const sum of possibleSums) {
-      newPossibleSums.add(sum + cleaningTime);
-    }
-    possibleSums.add(cleaningTime);
-    for (const sum of newPossibleSums) {
-      possibleSums.add(sum);
-    }
+    const [, cleaningTime] = Array.from(roomsMap)[start];
+    calculatePossibleSums(start + 1, currentSum, possibleSums);
+    calculatePossibleSums(start + 1, currentSum + cleaningTime, possibleSums);
   }
 
-  // Calculate the maximum sum that each cleaner should have
-  const exactlyEqualSum = totalSum / 2;
+  const possibleSums = new Set();
+  calculatePossibleSums(0, 0, possibleSums);
+
+  const exactlyEqualSum = sumTotalCleaningTime(roomsMap) / 2;
   let closestSum = 0;
 
-  // Find the closest sum to the maximum sum that can be achieved
   for (const sum of possibleSums) {
     if (sum <= exactlyEqualSum && sum > closestSum) {
       closestSum = sum;
