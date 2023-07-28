@@ -47,8 +47,6 @@ export function sumTotalCleaningTime(cleaner) {
 
 function getClosestSumDifference(roomsMap) {
   const totalSum = sumTotalCleaningTime(roomsMap);
-
-  // Create a set to store all the possible sums of cleaning times
   const possibleSums = new Set();
 
   for (const [, cleaningTime] of roomsMap) {
@@ -76,46 +74,35 @@ function getClosestSumDifference(roomsMap) {
   return closestSum;
 }
 
-// EDIT ME
 function findRoomCombination(roomsMap, closestSum) {
-  // IS THIS NECESSARY?
-  const rooms = Array.from(roomsMap.entries()); // Convert the Map to an array of [roomNumber, cleaningTime] pairs
-  const roomCount = rooms.length;
-  let chosenRooms = [];
+  let chosenRooms = new Map();
 
-  // Helper function to calculate the sum of cleaning times for the given combination of rooms
-  function calculateSum(combination) {
-    return combination.reduce((sum, [, cleaningTime]) => sum + cleaningTime, 0);
-  }
-
-  // Helper function to perform backtracking
   function backtrack(start) {
-    const sum = calculateSum(chosenRooms);
+    const sum = sumTotalCleaningTime(chosenRooms);
 
-    // If the sum equals the closestSum, we found a valid combination
-    if (sum === closestSum) {
-      return { chosenRooms, closestSum };
-    }
+    if (sum === closestSum) return { chosenRooms };
 
     // If the sum is greater than the closestSum or we have explored all rooms, stop
-    if (sum > closestSum || start === roomCount) {
-      return null;
-    }
+    if (sum > closestSum || start === roomsMap.size) return null;
 
     // Explore all possible combinations
-    for (let i = start; i < roomCount; i++) {
-      chosenRooms.push(rooms[i]);
-      const result = backtrack(i + 1);
-      if (result) {
-        return result;
+    let i = 0;
+    for (const [roomNumber, cleaningTime] of roomsMap) {
+      if (i >= start) {
+        chosenRooms.set(roomNumber, cleaningTime);
+
+        const result = backtrack(i + 1);
+        if (result) return result;
+
+        chosenRooms.delete(roomNumber);
       }
-      chosenRooms.pop();
+      i++;
     }
 
     return null;
   }
 
-  // Start backtracking from index 0
+  // Start recursively backtracking from index 0
   return backtrack(0);
 }
 
@@ -129,10 +116,7 @@ export function getRoomAssignments(roomsMap) {
   let cleanerB = new Map();
 
   roomsMap.forEach((cleaningTime, roomNumber) => {
-    // Check if the cleanerA map contains the room with the same room number
-    if (!cleanerA.has(roomNumber)) {
-      cleanerB.set(roomNumber, cleaningTime);
-    }
+    if (!cleanerA.has(roomNumber)) cleanerB.set(roomNumber, cleaningTime);
   });
 
   return [cleanerA, cleanerB];

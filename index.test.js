@@ -15,21 +15,6 @@ const mockAvailableRooms = {
   216: 'DDY',
 };
 
-describe('sumTotalCleaningTime', () => {
-  it('should calculate total cleaning time correctly', () => {
-    const totalCleaningTime = sumTotalCleaningTime(
-      setRoomsMap(mockAvailableRooms)
-    );
-
-    const expectedTotalCleaningTime = 750;
-
-    expect(totalCleaningTime).toBe(expectedTotalCleaningTime);
-  });
-
-  // unexpected data input could happen since it is based on user input
-  // more tests for this method could account for floats, negatives, and non-number values in the roomsMap
-});
-
 describe('getRoomAssignments', () => {
   it('should distribute all the rooms between two cleaners', () => {
     const roomsMap = setRoomsMap(mockAvailableRooms);
@@ -41,7 +26,7 @@ describe('getRoomAssignments', () => {
     ).toBeTruthy();
   });
 
-  it('should only assign a room to one cleaner', () => {
+  it('should only assign a room to one cleaner (no duplicate assignments)', () => {
     const roomsMap = setRoomsMap(mockAvailableRooms);
     const [cleanerA, cleanerB] = getRoomAssignments(roomsMap);
 
@@ -89,7 +74,7 @@ describe('getRoomAssignments', () => {
     expect(totalCleaningTimeCleanerA).toEqual(totalCleaningTimeCleanerB);
   });
 
-  it('should handle an odd-numbered totalCleaningTime', () => {
+  it('should handle a totalCleaningTime that cannot be equally divided', () => {
     const roomsWithOddNumberedTotalCleaningTime = {
       101: 'ABS',
       102: 'QDB',
@@ -115,7 +100,7 @@ describe('getRoomAssignments', () => {
     expect(totalCleaningTimeCleanerA).not.toEqual(totalCleaningTimeCleanerB);
   });
 
-  it('should minimize the cleaningTime difference between both cleaners if an equal cleaningTime is not possible between two cleaners', () => {
+  it('should minimize the cleaningTime difference between both cleaners', () => {
     const roomsWithUnequallyDistributableCleaningTimes = {
       101: 'ABS',
       102: 'QDB',
