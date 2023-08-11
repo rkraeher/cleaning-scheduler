@@ -50,15 +50,15 @@ export function parseRows(data) {
 }
 
 // add tests
-function isDepartureMoreThanTwoDaysFromToday(dayMonthString) {
-  const [day, month] = dayMonthString.split('.');
+export function isOccupiedCleaningTime(dottedDateString) {
+  const [day, month] = dottedDateString.split('.');
 
   // Get the current year to use as a placeholder
   // Add logic to account for end of the year
   const currentYear = new Date().getFullYear();
 
-  const formattedDepartureDate = `${month}/${day}/${currentYear}`;
-  const departureDate = new Date(formattedDepartureDate);
+  const dateString = `${month}/${day}/${currentYear}`;
+  const departureDate = new Date(dateString);
 
   const currentDate = new Date();
 
@@ -66,7 +66,7 @@ function isDepartureMoreThanTwoDaysFromToday(dayMonthString) {
     departureDate.getTime() - currentDate.getTime()
   );
   const differenceInDays = Math.ceil(differenceInTime / (1000 * 60 * 60 * 24));
-
+  console.log({ dateString, departureDate, differenceInDays });
   return differenceInDays >= 2;
 }
 
@@ -81,7 +81,7 @@ function parseAvailability(input = []) {
       availableRooms.push(row);
     } else {
       let dateString = row[2].split(' ')[1];
-      console.log(isDepartureMoreThanTwoDaysFromToday(dateString));
+      console.log(isOccupiedCleaningTime(dateString));
     }
   }
   // console.log({ availableRooms });

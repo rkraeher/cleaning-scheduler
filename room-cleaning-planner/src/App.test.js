@@ -1,4 +1,4 @@
-import { isNumber, parseRow, parseRows } from './App';
+import { isNumber, parseRow, parseRows, isOccupiedCleaningTime } from './App';
 
 describe('isNumber', () => {
   it('should return true for a valid number string', () => {
@@ -57,4 +57,44 @@ describe('parseRows', () => {
     ];
     expect(parseRows(data)).toEqual([]);
   });
+});
+
+describe('isOccupiedCleaningTime', () => {
+  it('should return true if the departure date is more than 2 days from today', () => {
+    const today = new Date();
+    const twoDaysFromToday = new Date();
+    twoDaysFromToday.setDate(today.getDate() + 2);
+
+    const result = isOccupiedCleaningTime(
+      `${twoDaysFromToday.getDate()}.${twoDaysFromToday.getMonth() + 1}`
+    );
+
+    expect(result).toBe(true);
+  });
+
+  it('should return true if the departure date is exactly 2 days from today', () => {
+    const today = new Date();
+    const twoDaysFromToday = new Date();
+    twoDaysFromToday.setDate(today.getDate() + 2);
+
+    const result = isOccupiedCleaningTime(
+      `${twoDaysFromToday.getDate()}.${twoDaysFromToday.getMonth() + 1}`
+    );
+
+    expect(result).toBe(true);
+  });
+
+  it('should return false if the departure date is less than 2 days from today', () => {
+    const today = new Date();
+    const oneDayFromToday = new Date();
+    oneDayFromToday.setDate(today.getDate() + 1);
+
+    const result = isOccupiedCleaningTime(
+      `${oneDayFromToday.getDate()}.${oneDayFromToday.getMonth() + 1}`
+    );
+
+    expect(result).toBe(false);
+  });
+
+  // Add more test cases here for edge cases, leap years, etc.
 });
