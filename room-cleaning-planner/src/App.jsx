@@ -49,15 +49,22 @@ export function parseRows(data) {
   return parsedRows;
 }
 
-// add tests
-export function isOccupiedCleaningTime(dottedDateString) {
-  const [day, month] = dottedDateString.split('.');
+function isNextYear(month) {
+  const currentMonthIndex = new Date().getMonth();
+  // JS Date months are zero indexed
+  const monthIndex = month * 1 - 1;
+  return currentMonthIndex === 11 && monthIndex === 0 ? true : false;
+}
 
-  // Get the current year to use as a placeholder
-  // Add logic to account for end of the year
+export function isOccupiedCleaningTime(date) {
+  const [day, month] = date.split('.');
+
   const currentYear = new Date().getFullYear();
 
-  const dateString = `${month}/${day}/${currentYear}`;
+  // we check for the year-end edgecase
+  const year = isNextYear(month) ? currentYear + 1 : currentYear;
+
+  const dateString = `${month}/${day}/${year}`;
   const departureDate = new Date(dateString);
 
   const currentDate = new Date();
@@ -66,26 +73,29 @@ export function isOccupiedCleaningTime(dottedDateString) {
     departureDate.getTime() - currentDate.getTime()
   );
   const differenceInDays = Math.ceil(differenceInTime / (1000 * 60 * 60 * 24));
-  console.log({ dateString, departureDate, differenceInDays });
+
   return differenceInDays >= 2;
 }
 
-// if includes 'available', use the time code
 function parseAvailability(input = []) {
   // these will use the timeCode to set the cleaningTime
-
   let availableRooms = [];
+  // these are all 15 min times
+  let occupiedRooms = [];
+
   for (let row of input) {
-    // magic str
-    if (row.includes('available')) {
+    let dateString = row[2].split(' ')[1];
+    const isRoomAvailable =
+      row.includes('available') || !isOccupiedCleaningTime(dateString);
+
+    if (isRoomAvailable) {
       availableRooms.push(row);
     } else {
-      let dateString = row[2].split(' ')[1];
-      console.log(isOccupiedCleaningTime(dateString));
+      occupiedRooms.push(row);
     }
   }
-  // console.log({ availableRooms });
-  return availableRooms;
+  console.log({ availableRooms, occupiedRooms });
+  return { availableRooms, occupiedRooms };
 }
 
 // make FileUpload a separate component
