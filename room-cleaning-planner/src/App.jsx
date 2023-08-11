@@ -49,6 +49,45 @@ export function parseRows(data) {
   return parsedRows;
 }
 
+// add tests
+function isDepartureMoreThanTwoDaysFromToday(dayMonthString) {
+  const [day, month] = dayMonthString.split('.');
+
+  // Get the current year to use as a placeholder
+  // Add logic to account for end of the year
+  const currentYear = new Date().getFullYear();
+
+  const formattedDepartureDate = `${month}/${day}/${currentYear}`;
+  const departureDate = new Date(formattedDepartureDate);
+
+  const currentDate = new Date();
+
+  const differenceInTime = Math.abs(
+    departureDate.getTime() - currentDate.getTime()
+  );
+  const differenceInDays = Math.ceil(differenceInTime / (1000 * 60 * 60 * 24));
+
+  return differenceInDays >= 2;
+}
+
+// if includes 'available', use the time code
+function parseAvailability(input = []) {
+  // these will use the timeCode to set the cleaningTime
+
+  let availableRooms = [];
+  for (let row of input) {
+    // magic str
+    if (row.includes('available')) {
+      availableRooms.push(row);
+    } else {
+      let dateString = row[2].split(' ')[1];
+      console.log(isDepartureMoreThanTwoDaysFromToday(dateString));
+    }
+  }
+  // console.log({ availableRooms });
+  return availableRooms;
+}
+
 // make FileUpload a separate component
 function FileUpload() {
   const handleFile = async (e) => {
@@ -63,10 +102,12 @@ function FileUpload() {
       defval: '',
     });
     const parsedData = parseRows(jsonData);
-    console.log({ jsonData, parsedData });
+    parseAvailability(parsedData);
+    // console.log({ parsedData });
   };
   return (
     <div>
+      {/* should only upload xlsx files? or handle csvs too? */}
       <input type="file" onChange={(e) => handleFile(e)} />
     </div>
   );
