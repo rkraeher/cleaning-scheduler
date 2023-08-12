@@ -1,8 +1,7 @@
 import React from 'react';
 import { read, utils } from 'xlsx';
 
-// isNumberAsString?
-export function isNumber(value) {
+export function isNumberAsString(value) {
   if (typeof value === 'string' && value.trim() !== '') {
     return !Number.isNaN(Number(value));
   }
@@ -10,8 +9,6 @@ export function isNumber(value) {
 }
 
 export function parseRow(row) {
-  // both these condition checks are highly specific to the usecase
-  // we could combine them into a single condition, isRowRelevant
   function isTimeCode(cell) {
     // matches D, Q, or O followed by either two capital letters or a capital letter and a number
     const regex = /^(D|Q|O)([A-Z]{2}|[A-Z]\d)$/;
@@ -26,12 +23,14 @@ export function parseRow(row) {
 
   let parsedRow = [];
   for (let i = 0; i < row.length; i++) {
-    if (
-      (row[i] && isNumber(row[i])) ||
-      isTimeCode(row[i]) ||
-      isAvailability(row[i])
-    ) {
-      parsedRow.push(row[i]);
+    const cell = row[i];
+    const isCellRelevant =
+      (cell && isNumberAsString(cell)) ||
+      isTimeCode(cell) ||
+      isAvailability(cell);
+
+    if (isCellRelevant) {
+      parsedRow.push(cell);
     }
   }
   return parsedRow;
@@ -41,7 +40,7 @@ export function parseRows(data) {
   let parsedRows = [];
   // for later: use filter() instead of this loop
   for (let i = 0; i < data.length; i++) {
-    if (data[i][0] && isNumber(data[i][0])) {
+    if (data[i][0] && isNumberAsString(data[i][0])) {
       let parsedRow = parseRow(data[i]);
       parsedRows.push([...parsedRow]);
     }
@@ -56,7 +55,7 @@ function isNextYear(month) {
   return currentMonthIndex === 11 && monthIndex === 0 ? true : false;
 }
 
-export function isOccupiedCleaningTime(date) {
+function isDeparture(date) {
   const [day, month] = date.split('.');
 
   const currentYear = new Date().getFullYear();
@@ -74,28 +73,27 @@ export function isOccupiedCleaningTime(date) {
   );
   const differenceInDays = Math.ceil(differenceInTime / (1000 * 60 * 60 * 24));
 
-  return differenceInDays >= 2;
+  return differenceInDays < 2;
 }
 
-function parseAvailability(input = []) {
-  // these will use the timeCode to set the cleaningTime
-  let availableRooms = [];
-  // these are all 15 min times
-  let occupiedRooms = [];
+function parseAvailability(rooms = []) {
+  // we may want to move this and make it a global const
+  const roomState = {
+    DEPARTURE: 'departure',
+    STAY: 'stay',
+  };
 
-  for (let row of input) {
-    let dateString = row[2].split(' ')[1];
-    const isRoomAvailable =
-      row.includes('available') || !isOccupiedCleaningTime(dateString);
+  for (let room of rooms) {
+    let dateString = room[2].split(' ')[1];
 
-    if (isRoomAvailable) {
-      availableRooms.push(row);
+    if (room.includes('available') || isDeparture(dateString)) {
+      room.push(roomState.DEPARTURE);
     } else {
-      occupiedRooms.push(row);
+      room.push(roomState.STAY);
     }
   }
-  console.log({ availableRooms, occupiedRooms });
-  return { availableRooms, occupiedRooms };
+  console.log(rooms);
+  return rooms;
 }
 
 // make FileUpload a separate component
@@ -107,13 +105,12 @@ function FileUpload() {
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
     const jsonData = utils.sheet_to_json(worksheet, {
       // API specific details: instead of getting an array of objects with '_EMPTY' as the property name for each cell,
-      // by passing the opts argument here we can map every row into an array to make processing easier
+      // by passing the options argument here we can map every row into an array to make processing easier
       header: 1,
       defval: '',
     });
     const parsedData = parseRows(jsonData);
     parseAvailability(parsedData);
-    // console.log({ parsedData });
   };
   return (
     <div>

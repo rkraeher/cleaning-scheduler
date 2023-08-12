@@ -1,7 +1,5 @@
-// we loop through entire workbook
-// anything that is 'available' or till ...next day = departure ('Q','D', or 'O' cleaning time)
-// everything that has till ...2 days in future, = occupied (15 mins)
 const CLEANING_TIMES_IN_MINUTES = {
+  // we won't need A because the time will just be directly assigned in setRoomsMap
   A: 15,
   D: 30,
   Q: 60,
@@ -28,14 +26,18 @@ const [cleanerA, cleanerB] = getRoomAssignments(setRoomsMap(availableRooms));
 const totalCleaningTimeCleanerA = sumTotalCleaningTime(cleanerA);
 const totalCleaningTimeCleanerB = sumTotalCleaningTime(cleanerB);
 
+// rooms param comes from App
 export function setRoomsMap(availableRooms) {
   let roomsMap = new Map();
 
+  // [roomNumber, timeCode] // room[0] - room[1] // slice?
   for (const [roomNumber, cleaningTimeCodes] of Object.entries(
     availableRooms
   )) {
-    // only the first letter from the codes column is needed to get the cleaningTimeForOneRoom
+    // only the first letter at index 0 from the timeCodes column is needed to get the cleaningTimeForOneRoom
     roomsMap.set(roomNumber, CLEANING_TIMES_IN_MINUTES[cleaningTimeCodes[0]]);
+    // if room includes 'occupied', set [roomNumer, 15]
+    // else use the time code
   }
 
   return roomsMap;
