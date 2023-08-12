@@ -1,5 +1,6 @@
 import React from 'react';
 import { read, utils } from 'xlsx';
+import { CLEANING_TIMES_IN_MINUTES, roomStates } from './constants';
 
 export function isNumberAsString(value) {
   if (typeof value === 'string' && value.trim() !== '') {
@@ -77,23 +78,33 @@ function isDeparture(date) {
 }
 
 function parseAvailability(rooms = []) {
-  // we may want to move this and make it a global const
-  const roomState = {
-    DEPARTURE: 'departure',
-    STAY: 'stay',
-  };
-
   for (let room of rooms) {
     let dateString = room[2].split(' ')[1];
 
     if (room.includes('available') || isDeparture(dateString)) {
-      room.push(roomState.DEPARTURE);
+      room.push(roomStates.DEPARTURE);
     } else {
-      room.push(roomState.STAY);
+      room.push(roomStates.STAY);
     }
   }
-  console.log(rooms);
+  console.log({ rooms });
   return rooms;
+}
+
+// this works, but now we need to figure out how to import our script module
+function setRoomsMap(rooms) {
+  let roomsMap = new Map();
+
+  for (const [roomNumber, cleaningTimeCode, , roomState] of rooms) {
+    if (roomState === roomStates.STAY) {
+      roomsMap.set(roomNumber, CLEANING_TIMES_IN_MINUTES['STAY']);
+    } else {
+      // only the first letter from the timeCodes cell is needed to set the cleaningTimeForOneRoom
+      roomsMap.set(roomNumber, CLEANING_TIMES_IN_MINUTESf[cleaningTimeCode[0]]);
+    }
+  }
+  console.log({ roomsMap });
+  return roomsMap;
 }
 
 // make FileUpload a separate component
@@ -110,7 +121,8 @@ function FileUpload() {
       defval: '',
     });
     const parsedData = parseRows(jsonData);
-    parseAvailability(parsedData);
+    const parsedRooms = parseAvailability(parsedData);
+    setRoomsMap(parsedRooms);
   };
   return (
     <div>

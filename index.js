@@ -1,45 +1,20 @@
-const CLEANING_TIMES_IN_MINUTES = {
-  // we won't need A because the time will just be directly assigned in setRoomsMap
-  A: 15,
-  D: 30,
-  Q: 60,
-  O: 120,
-};
+import { CLEANING_TIMES_IN_MINUTES } from './room-cleaning-planner/src/constants';
 
-// this data will come from the spreadsheet
-const availableRooms = {
-  101: 'ABS',
-  102: 'QDB',
-  103: 'QDS',
-  203: 'OC1',
-  207: 'DDY',
-  210: 'ODY',
-  211: 'DBS',
-  212: 'QDB',
-  213: 'QDS',
-  214: 'OC1',
-  215: 'DDY',
-  216: 'DDY',
-};
+// const [cleanerA, cleanerB] = getRoomAssignments(setRoomsMap(availableRooms));
+// const totalCleaningTimeCleanerA = sumTotalCleaningTime(cleanerA);
+// const totalCleaningTimeCleanerB = sumTotalCleaningTime(cleanerB);
 
-const [cleanerA, cleanerB] = getRoomAssignments(setRoomsMap(availableRooms));
-const totalCleaningTimeCleanerA = sumTotalCleaningTime(cleanerA);
-const totalCleaningTimeCleanerB = sumTotalCleaningTime(cleanerB);
-
-// rooms param comes from App
-export function setRoomsMap(availableRooms) {
+export function setRoomsMap(rooms) {
   let roomsMap = new Map();
 
-  // [roomNumber, timeCode] // room[0] - room[1] // slice?
-  for (const [roomNumber, cleaningTimeCodes] of Object.entries(
-    availableRooms
-  )) {
-    // only the first letter at index 0 from the timeCodes column is needed to get the cleaningTimeForOneRoom
-    roomsMap.set(roomNumber, CLEANING_TIMES_IN_MINUTES[cleaningTimeCodes[0]]);
-    // if room includes 'occupied', set [roomNumer, 15]
-    // else use the time code
+  for (const [roomNumber, cleaningTimeCode, , roomState] of rooms) {
+    if (roomState === roomStates.STAY) {
+      roomsMap.set(roomNumber, CLEANING_TIMES_IN_MINUTES['STAY']);
+    } else {
+      // only the first letter from the timeCodes cell is needed to set the cleaningTimeForOneRoom
+      roomsMap.set(roomNumber, CLEANING_TIMES_IN_MINUTES[cleaningTimeCode[0]]);
+    }
   }
-
   return roomsMap;
 }
 
@@ -107,6 +82,7 @@ function findRoomCombination(roomsMap, closestSum) {
 }
 
 export function getRoomAssignments(roomsMap) {
+  // call setRoomsMap from in here
   const { chosenRooms } = findRoomCombination(
     roomsMap,
     getClosestSumDifference(roomsMap)
@@ -122,9 +98,9 @@ export function getRoomAssignments(roomsMap) {
   return [cleanerA, cleanerB];
 }
 
-console.log({
-  cleanerA,
-  cleanerB,
-  totalCleaningTimeCleanerA,
-  totalCleaningTimeCleanerB,
-});
+// console.log({
+//   cleanerA,
+//   cleanerB,
+//   totalCleaningTimeCleanerA,
+//   totalCleaningTimeCleanerB,
+// });
