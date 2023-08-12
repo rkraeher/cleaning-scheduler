@@ -1,6 +1,7 @@
 import React from 'react';
 import { read, utils } from 'xlsx';
-import { CLEANING_TIMES_IN_MINUTES, roomStates } from './constants';
+import { roomStates } from './assets/constants';
+import { getRoomAssignments, setRoomsMap } from './assets/script';
 
 export function isNumberAsString(value) {
   if (typeof value === 'string' && value.trim() !== '') {
@@ -91,22 +92,6 @@ function parseAvailability(rooms = []) {
   return rooms;
 }
 
-// this works, but now we need to figure out how to import our script module
-function setRoomsMap(rooms) {
-  let roomsMap = new Map();
-
-  for (const [roomNumber, cleaningTimeCode, , roomState] of rooms) {
-    if (roomState === roomStates.STAY) {
-      roomsMap.set(roomNumber, CLEANING_TIMES_IN_MINUTES['STAY']);
-    } else {
-      // only the first letter from the timeCodes cell is needed to set the cleaningTimeForOneRoom
-      roomsMap.set(roomNumber, CLEANING_TIMES_IN_MINUTESf[cleaningTimeCode[0]]);
-    }
-  }
-  console.log({ roomsMap });
-  return roomsMap;
-}
-
 // make FileUpload a separate component
 function FileUpload() {
   const handleFile = async (e) => {
@@ -122,7 +107,12 @@ function FileUpload() {
     });
     const parsedData = parseRows(jsonData);
     const parsedRooms = parseAvailability(parsedData);
-    setRoomsMap(parsedRooms);
+
+    // why does this function work but not the other?
+    const roomsMap = setRoomsMap(parsedRooms);
+    console.log({ roomsMap });
+    // const [cleanerA, cleanerB] = getRoomAssignments(parsedRooms);
+    // console.log({ cleanerA, cleanerB });
   };
   return (
     <div>
