@@ -1,6 +1,11 @@
-import { sumTotalCleaningTime, getRoomAssignments } from './getRoomAssignments';
+import {
+  sumTotalCleaningTime,
+  getRoomAssignments,
+  setRoomsMap,
+  calculateSums,
+} from './getRoomAssignments';
 
-const availableRooms = [
+const rooms = [
   ['101', 'DBS', 'till 12.08', 'departure'],
   ['102', 'QDB', 'available', 'departure'],
   ['103', 'QDS', 'available', 'departure'],
@@ -36,15 +41,58 @@ const availableRooms = [
   ['216', 'DDY', 'available', 'departure'],
 ];
 
-describe('getRoomAssignments', () => {
-  it.skip('should distribute all the rooms between two cleaners', () => {
-    const [cleanerA, cleanerB] = getRoomAssignments(availableRooms);
-    const allRooms = [...roomsMap.keys()];
+describe('calculateSums', () => {
+  it('should calculate the difference between the sums of rooms on each floor', () => {
+    const roomsMap = setRoomsMap(rooms);
+    const { firstFloorSum, secondFloorSum, sumDifference } =
+      calculateSums(roomsMap);
+    const sumAllCleaningTimes = sumTotalCleaningTime(roomsMap);
 
-    expect(
-      allRooms.every((room) => cleanerA.has(room) || cleanerB.has(room))
-    ).toBeTruthy();
+    expect(secondFloorSum - firstFloorSum).toEqual(sumDifference);
+    expect(secondFloorSum + firstFloorSum).toEqual(sumAllCleaningTimes);
   });
+
+  it('should organize the rooms on each floor based on their cleaningTime', () => {
+    const roomsMap = setRoomsMap(rooms);
+    const expectedRoomsOrganizedByCleaningTime = new Map([
+      [
+        30,
+        [
+          '101',
+          '104',
+          '105',
+          '106',
+          '107',
+          '108',
+          '109',
+          '110',
+          '111',
+          '112',
+          '113',
+          '116',
+          '117',
+        ],
+      ],
+      [60, ['102', '103', '114', '115']],
+    ]);
+
+    const { firstFloorRoomsByCleaningTime } = calculateSums(roomsMap);
+
+    expect(firstFloorRoomsByCleaningTime).toEqual(
+      expectedRoomsOrganizedByCleaningTime
+    );
+  });
+});
+
+// getRoomAssignments
+// it should return a whole floor of rooms for each cleaner if the difference is 0
+// it should balance the rooms to assign rooms with the minimal sum difference possible10
+describe.skip('getRoomAssignments', () => {
+  // it('should distribute all the rooms between two cleaners', () => {
+  //     expect(
+  //   allRooms.every((room) => cleanerA.has(room) || cleanerB.has(room))
+  // ).toBeTruthy();
+  // });
 
   it.skip('should only assign a room to one cleaner (no duplicate assignments)', () => {
     const roomsMap = setRoomsMap(mockAvailableRooms);

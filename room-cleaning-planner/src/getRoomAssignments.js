@@ -51,7 +51,7 @@ export function sumTotalCleaningTime(cleaner) {
   return [...cleaner.values()].reduce((sum, value) => sum + value, 0);
 }
 
-function setRoomsMap(rooms) {
+export function setRoomsMap(rooms) {
   let roomsMap = new Map();
 
   for (const [roomNumber, cleaningTimeCode, , roomState] of rooms) {
@@ -65,19 +65,58 @@ function setRoomsMap(rooms) {
   return roomsMap;
 }
 
-export function getRoomAssignments(rooms) {
-  const roomsMap = setRoomsMap(rooms);
-  let firstFloor = [];
-  let secondFloor = [];
+export function calculateSums(roomsMap) {
+  let firstFloor = new Map();
+  let secondFloor = new Map();
 
-  for (let room of roomsMap.keys()) {
+  // I separate the rooms by floor
+  // TODO extract function, rf loop into pipeline
+  for (let [room, cleaningTime] of roomsMap) {
     if (room[0] === '1') {
-      firstFloor.push(room);
+      firstFloor.set(room, cleaningTime);
     } else {
-      secondFloor.push(room);
+      secondFloor.set(room, cleaningTime);
     }
   }
-  console.log({ rooms, roomsMap, firstFloor, secondFloor });
+
+  let firstFloorRoomsByCleaningTime = new Map();
+
+  // I organise the rooms according to their cleaning time
+  // TODO extract function, rf loop into pipeline
+  for (let [room, cleaningTime] of firstFloor) {
+    console.log(room, cleaningTime);
+    if (!firstFloorRoomsByCleaningTime.get(cleaningTime)) {
+      firstFloorRoomsByCleaningTime.set(cleaningTime, [room]);
+    } else {
+      const values = firstFloorRoomsByCleaningTime.get(cleaningTime);
+      firstFloorRoomsByCleaningTime.set(cleaningTime, [...values, room]);
+    }
+  }
+
+  const firstFloorSum = sumTotalCleaningTime(firstFloor);
+  const secondFloorSum = sumTotalCleaningTime(secondFloor);
+  const sumDifference = Math.abs(firstFloorSum - secondFloorSum);
+
+  console.log({
+    // roomsMap,
+    // firstFloor,
+    // secondFloor,
+    firstFloorSum,
+    secondFloorSum,
+    sumDifference,
+    firstFloorRoomsByCleaningTime,
+  });
+  return {
+    firstFloorSum,
+    secondFloorSum,
+    sumDifference,
+    firstFloorRoomsByCleaningTime,
+  };
+}
+
+export function getRoomAssignments(rooms) {
+  const roomsMap = setRoomsMap(rooms);
+  calculateSums(roomsMap);
 }
 
 getRoomAssignments(availableRooms);
