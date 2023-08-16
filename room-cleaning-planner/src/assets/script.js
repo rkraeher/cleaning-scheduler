@@ -1,99 +1,110 @@
-import { CLEANING_TIMES_IN_MINUTES, roomStates } from './constants';
+// import { CLEANING_TIMES_IN_MINUTES, roomStates } from './constants';
 
-// const [cleanerA, cleanerB] = getRoomAssignments(setRoomsMap(availableRooms));
-// const totalCleaningTimeCleanerA = sumTotalCleaningTime(cleanerA);
-// const totalCleaningTimeCleanerB = sumTotalCleaningTime(cleanerB);
+// // const [cleanerA, cleanerB] = getRoomAssignments(setRoomsMap(availableRooms));
+// // const totalCleaningTimeCleanerA = sumTotalCleaningTime(cleanerA);
+// // const totalCleaningTimeCleanerB = sumTotalCleaningTime(cleanerB);
 
-export function setRoomsMap(rooms) {
-  let roomsMap = new Map();
+// // TODO: during refactor I want to replace as many loops with pipelines as possible
 
-  for (const [roomNumber, cleaningTimeCode, , roomState] of rooms) {
-    if (roomState === roomStates.STAY) {
-      roomsMap.set(roomNumber, CLEANING_TIMES_IN_MINUTES['STAY']);
-    } else {
-      // only the first letter from the timeCodes cell is needed to set the cleaningTimeForOneRoom
-      roomsMap.set(roomNumber, CLEANING_TIMES_IN_MINUTES[cleaningTimeCode[0]]);
-    }
-  }
-  return roomsMap;
-}
+// // createRoomAndCleaningTimeMap
+// export function setRoomsMap(rooms) {
+//   let roomsMap = new Map();
 
-export function sumTotalCleaningTime(cleaner) {
-  return [...cleaner.values()].reduce((sum, value) => sum + value, 0);
-}
+//   for (const [roomNumber, cleaningTimeCode, , roomState] of rooms) {
+//     if (roomState === roomStates.STAY) {
+//       roomsMap.set(roomNumber, CLEANING_TIMES_IN_MINUTES['STAY']);
+//     } else {
+//       // only the first letter from the timeCodes cell is needed to set the cleaningTimeForOneRoom
+//       roomsMap.set(roomNumber, CLEANING_TIMES_IN_MINUTES[cleaningTimeCode[0]]);
+//     }
+//   }
+//   return roomsMap;
+// }
 
-function getClosestSumDifference(roomsMap) {
-  function calculatePossibleSums(start, currentSum, possibleSums) {
-    if (start === roomsMap.size) {
-      possibleSums.add(currentSum);
-      return;
-    }
+// export function sumTotalCleaningTime(cleaner) {
+//   return [...cleaner.values()].reduce((sum, value) => sum + value, 0);
+// }
 
-    const [, cleaningTime] = Array.from(roomsMap)[start];
-    calculatePossibleSums(start + 1, currentSum, possibleSums);
-    calculatePossibleSums(start + 1, currentSum + cleaningTime, possibleSums);
-  }
+// // I need to understand this fn better
+// function getClosestSumDifference(roomsMap) {
+//   function calculatePossibleSums(start, currentSum, possibleSums) {
+//     if (start === roomsMap.size) {
+//       possibleSums.add(currentSum);
+//       return;
+//     }
 
-  const possibleSums = new Set();
-  calculatePossibleSums(0, 0, possibleSums);
+//     const [, cleaningTime] = Array.from(roomsMap)[start];
+//     calculatePossibleSums(start + 1, currentSum, possibleSums);
+//     calculatePossibleSums(start + 1, currentSum + cleaningTime, possibleSums);
+//   }
 
-  const exactlyEqualSum = sumTotalCleaningTime(roomsMap) / 2;
-  let closestSum = 0;
+//   const possibleSums = new Set();
+//   calculatePossibleSums(0, 0, possibleSums);
 
-  for (const sum of possibleSums) {
-    if (sum <= exactlyEqualSum && sum > closestSum) {
-      closestSum = sum;
-    }
-  }
+//   const exactlyEqualSum = sumTotalCleaningTime(roomsMap) / 2;
+//   let closestSum = 0;
 
-  return closestSum;
-}
+//   // this loop is its own fn?
+//   for (const sum of possibleSums) {
+//     if (sum <= exactlyEqualSum && sum > closestSum) {
+//       closestSum = sum;
+//     }
+//   }
 
-function findRoomCombination(roomsMap, closestSum) {
-  let chosenRooms = new Map();
+//   return closestSum;
+// }
 
-  function backtrack(start) {
-    const sum = sumTotalCleaningTime(chosenRooms);
+// function findRoomCombination(roomsMap, closestSum) {
+//   let chosenRooms = new Map();
 
-    if (sum === closestSum) return { chosenRooms };
+//   // I need to understand this fn better
+//   function backtrack(start) {
+//     const sum = sumTotalCleaningTime(chosenRooms);
 
-    // If the sum is greater than the closestSum or we have explored all rooms, stop
-    if (sum > closestSum || start === roomsMap.size) return null;
+//     if (sum === closestSum) return { chosenRooms };
 
-    // Explore all possible combinations
-    let i = 0;
-    for (const [roomNumber, cleaningTime] of roomsMap) {
-      if (i >= start) {
-        chosenRooms.set(roomNumber, cleaningTime);
+//     // If the sum is greater than the closestSum or we have explored all rooms, stop
+//     if (sum > closestSum || start === roomsMap.size) return null;
 
-        const result = backtrack(i + 1);
-        if (result) return result;
+//     // Explore all possible combinations
+//     let i = 0;
+//     for (const [roomNumber, cleaningTime] of roomsMap) {
+//       if (i >= start) {
+//         chosenRooms.set(roomNumber, cleaningTime);
 
-        chosenRooms.delete(roomNumber);
-      }
-      i++;
-    }
+//         const result = backtrack(i + 1);
+//         if (result) return result;
 
-    return null;
-  }
+//         chosenRooms.delete(roomNumber);
+//       }
+//       i++;
+//     }
 
-  // Start recursively backtracking from index 0
-  return backtrack(0);
-}
+//     return null;
+//   }
 
-export function getRoomAssignments(rooms) {
-  const roomsMap = setRoomsMap(rooms);
-  const { chosenRooms } = findRoomCombination(
-    roomsMap,
-    getClosestSumDifference(roomsMap)
-  );
+//   // Start recursively backtracking from index 0
+//   return backtrack(0);
+// }
 
-  let cleanerA = new Map(chosenRooms);
-  let cleanerB = new Map();
+// // getCleanerRoomAssignments
+// // main()
+// export function getRoomAssignments(roomsMap) {
+//   // prefer to call setRoomsMap from here
+//   //   const roomsMap = setRoomsMap(rooms);
+//   const { chosenRooms } = findRoomCombination(
+//     roomsMap,
+//     getClosestSumDifference(roomsMap)
+//   );
 
-  roomsMap.forEach((cleaningTime, roomNumber) => {
-    if (!cleanerA.has(roomNumber)) cleanerB.set(roomNumber, cleaningTime);
-  });
-  console.log({ cleanerA, cleanerB });
-  return [cleanerA, cleanerB];
-}
+//   let cleanerA = new Map(chosenRooms);
+//   let cleanerB = new Map();
+
+//   // forEach and async code....? it should be fine because its just operating on the argument
+//   // the forEach callback isnt async forEach(async ()=> do stuff)
+//   roomsMap.forEach((cleaningTime, roomNumber) => {
+//     if (!cleanerA.has(roomNumber)) cleanerB.set(roomNumber, cleaningTime);
+//   });
+//   console.log({ cleanerA, cleanerB });
+//   return [cleanerA, cleanerB];
+// }
