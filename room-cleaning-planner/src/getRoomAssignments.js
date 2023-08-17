@@ -46,7 +46,6 @@ const availableRooms = [
   ['216', 'DDY', 'available', 'departure'],
 ];
 
-// util function
 export function sumTotalCleaningTime(cleaner) {
   return [...cleaner.values()].reduce((sum, value) => sum + value, 0);
 }
@@ -54,6 +53,7 @@ export function sumTotalCleaningTime(cleaner) {
 export function setRoomsMap(rooms) {
   let roomsMap = new Map();
 
+  // TODO rf me into pipeline collection?s
   for (const [roomNumber, cleaningTimeCode, , roomState] of rooms) {
     if (roomState === roomStates.STAY) {
       roomsMap.set(roomNumber, CLEANING_TIMES_IN_MINUTES['STAY']);
@@ -65,39 +65,21 @@ export function setRoomsMap(rooms) {
   return roomsMap;
 }
 
-// calculateSumDifference
-export function calculateSums(roomsMap) {
-  const [firstFloorRooms, secondFloorRooms] = separateRoomsByFloor(roomsMap);
-
-  // I should be movedbecause I don't belong inside calculate songs
-  // where should I go? what am I needed for?
-  // I provide the correctly organised date to perform the room balancing
-  // getBalancedRoomLists - replaces getRoomAssignments
-  const firstFloorRoomsByCleaningTime =
-    organiseRoomsByCleaningTime(firstFloorRooms);
-  const secondFloorRoomsByCleaningTime =
-    organiseRoomsByCleaningTime(secondFloorRooms);
+export function calculateSumDifference(floors) {
+  const { firstFloorRooms, secondFloorRooms } = floors;
 
   const firstFloorSum = sumTotalCleaningTime(firstFloorRooms);
   const secondFloorSum = sumTotalCleaningTime(secondFloorRooms);
   const sumDifference = Math.abs(firstFloorSum - secondFloorSum);
 
-  console.log({
-    firstFloorSum,
-    secondFloorSum,
-    sumDifference,
-    firstFloorRoomsByCleaningTime,
-  });
   return {
     firstFloorSum,
     secondFloorSum,
     sumDifference,
-    firstFloorRoomsByCleaningTime,
-    secondFloorRoomsByCleaningTime,
   };
 }
 
-function separateRoomsByFloor(roomsMap) {
+export function separateRoomsByFloor(roomsMap) {
   let firstFloorRooms = new Map();
   let secondFloorRooms = new Map();
 
@@ -113,7 +95,7 @@ function separateRoomsByFloor(roomsMap) {
   return [firstFloorRooms, secondFloorRooms];
 }
 
-function organiseRoomsByCleaningTime(floorSeparatedRooms) {
+export function organiseRoomsByCleaningTime(floorSeparatedRooms) {
   let timeOrganisedRooms = new Map();
 
   // TODO extract function, rf loop into pipeline
@@ -128,10 +110,29 @@ function organiseRoomsByCleaningTime(floorSeparatedRooms) {
   return timeOrganisedRooms;
 }
 
-// put me at the top
-export function getRoomAssignments(rooms) {
+// put me at the top and change module name
+export function getBalancedRoomLists(rooms) {
   const roomsMap = setRoomsMap(rooms);
-  calculateSums(roomsMap);
+  const [firstFloorRooms, secondFloorRooms] = separateRoomsByFloor(roomsMap);
+
+  // both calculateSumDif and organiseRooms accept the output from separateRooms
+  // I could rf separateRooms to output one, destructurable object
+  const sumDifferenceBetweenFloors = calculateSumDifference({
+    firstFloorRooms,
+    secondFloorRooms,
+  });
+
+  const firstFloorRoomsByCleaningTime =
+    organiseRoomsByCleaningTime(firstFloorRooms);
+  const secondFloorRoomsByCleaningTime =
+    organiseRoomsByCleaningTime(secondFloorRooms);
+
+  console.log({
+    sumDifferenceBetweenFloors,
+    firstFloorRoomsByCleaningTime,
+    secondFloorRoomsByCleaningTime,
+  });
+  return null;
 }
 
-getRoomAssignments(availableRooms);
+getBalancedRoomLists(availableRooms);

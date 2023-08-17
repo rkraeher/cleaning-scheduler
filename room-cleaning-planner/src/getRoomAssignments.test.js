@@ -1,8 +1,10 @@
 import {
   sumTotalCleaningTime,
-  getRoomAssignments,
+  getBalancedRoomLists,
   setRoomsMap,
-  calculateSums,
+  calculateSumDifference,
+  separateRoomsByFloor,
+  organiseRoomsByCleaningTime,
 } from './getRoomAssignments';
 
 const rooms = [
@@ -41,20 +43,44 @@ const rooms = [
   ['216', 'DDY', 'available', 'departure'],
 ];
 
-describe('calculateSums', () => {
-  // tests separateRoomsByFloor
+const roomsMap = setRoomsMap(rooms);
+const [firstFloorRooms, secondFloorRooms] = separateRoomsByFloor(roomsMap);
+
+describe('separateRoomsByFloor', () => {
+  it('should separate the rooms according to their floor', () => {
+    const smallRoomsMap = new Map([
+      ['101', 30],
+      ['102', 60],
+      ['201', 15],
+      ['202', 30],
+    ]);
+
+    const [firstFloorRooms, secondFloorRooms] =
+      separateRoomsByFloor(smallRoomsMap);
+
+    expect(firstFloorRooms.size).toBe(2);
+    expect(firstFloorRooms.get('101')).toBe(30);
+    expect(firstFloorRooms.get('102')).toBe(60);
+
+    expect(secondFloorRooms.size).toBe(2);
+    expect(secondFloorRooms.get('201')).toBe(15);
+    expect(secondFloorRooms.get('202')).toBe(30);
+  });
+});
+
+describe('calculateSumDifference', () => {
   it('should calculate the difference between the sums of rooms on each floor', () => {
-    const roomsMap = setRoomsMap(rooms);
     const { firstFloorSum, secondFloorSum, sumDifference } =
-      calculateSums(roomsMap);
+      calculateSumDifference({ firstFloorRooms, secondFloorRooms });
     const sumAllCleaningTimes = sumTotalCleaningTime(roomsMap);
 
     expect(secondFloorSum - firstFloorSum).toEqual(sumDifference);
     expect(secondFloorSum + firstFloorSum).toEqual(sumAllCleaningTimes);
   });
-  // tests organizeRoomsByCleaningTime
+});
+
+describe('organiseRoomsByCleaningTime', () => {
   it('should organize the rooms on each floor based on their cleaningTime', () => {
-    const roomsMap = setRoomsMap(rooms);
     const expectedRoomsOrganizedByCleaningTime = new Map([
       [
         30,
@@ -77,7 +103,8 @@ describe('calculateSums', () => {
       [60, ['102', '103', '114', '115']],
     ]);
 
-    const { firstFloorRoomsByCleaningTime } = calculateSums(roomsMap);
+    const firstFloorRoomsByCleaningTime =
+      organiseRoomsByCleaningTime(firstFloorRooms);
 
     expect(firstFloorRoomsByCleaningTime).toEqual(
       expectedRoomsOrganizedByCleaningTime
@@ -85,10 +112,9 @@ describe('calculateSums', () => {
   });
 });
 
-// getRoomAssignments
 // it should return a whole floor of rooms for each cleaner if the difference is 0
 // it should balance the rooms to assign rooms with the minimal sum difference possible10
-describe.skip('getRoomAssignments', () => {
+describe('getBalancedRoomLists', () => {
   // it('should distribute all the rooms between two cleaners', () => {
   //     expect(
   //   allRooms.every((room) => cleanerA.has(room) || cleanerB.has(room))
@@ -97,7 +123,7 @@ describe.skip('getRoomAssignments', () => {
 
   it.skip('should only assign a room to one cleaner (no duplicate assignments)', () => {
     const roomsMap = setRoomsMap(mockAvailableRooms);
-    const [cleanerA, cleanerB] = getRoomAssignments(roomsMap);
+    const [cleanerA, cleanerB] = getBalancedRoomLists(roomsMap);
 
     const cleanerArooms = ['101', '102', '103', '203', '207', '211', '215'];
     const cleanerBrooms = ['210', '212', '213', '214', '216'];
@@ -133,7 +159,7 @@ describe.skip('getRoomAssignments', () => {
       215: 'DDY',
     };
 
-    const [cleanerA, cleanerB] = getRoomAssignments(
+    const [cleanerA, cleanerB] = getBalancedRoomLists(
       setRoomsMap(roomsWithEquallyDistributableCleaningTimes)
     );
 
@@ -160,7 +186,7 @@ describe.skip('getRoomAssignments', () => {
     };
 
     const roomsMap = setRoomsMap(roomsWithOddNumberedTotalCleaningTime);
-    const [cleanerA, cleanerB] = getRoomAssignments(roomsMap);
+    const [cleanerA, cleanerB] = getBalancedRoomLists(roomsMap);
     const oddNumberedTotalCleaningTime = sumTotalCleaningTime(roomsMap);
     const totalCleaningTimeCleanerA = sumTotalCleaningTime(cleanerA);
     const totalCleaningTimeCleanerB = sumTotalCleaningTime(cleanerB);
@@ -185,7 +211,7 @@ describe.skip('getRoomAssignments', () => {
       216: 'DDY',
     };
 
-    const [cleanerA, cleanerB] = getRoomAssignments(
+    const [cleanerA, cleanerB] = getBalancedRoomLists(
       setRoomsMap(roomsWithUnequallyDistributableCleaningTimes)
     );
 
