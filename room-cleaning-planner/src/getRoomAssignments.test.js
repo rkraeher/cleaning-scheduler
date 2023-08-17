@@ -42,6 +42,7 @@ const rooms = [
 ];
 
 describe('calculateSums', () => {
+  // tests separateRoomsByFloor
   it('should calculate the difference between the sums of rooms on each floor', () => {
     const roomsMap = setRoomsMap(rooms);
     const { firstFloorSum, secondFloorSum, sumDifference } =
@@ -51,7 +52,7 @@ describe('calculateSums', () => {
     expect(secondFloorSum - firstFloorSum).toEqual(sumDifference);
     expect(secondFloorSum + firstFloorSum).toEqual(sumAllCleaningTimes);
   });
-
+  // tests organizeRoomsByCleaningTime
   it('should organize the rooms on each floor based on their cleaningTime', () => {
     const roomsMap = setRoomsMap(rooms);
     const expectedRoomsOrganizedByCleaningTime = new Map([

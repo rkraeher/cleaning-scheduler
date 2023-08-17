@@ -65,42 +65,24 @@ export function setRoomsMap(rooms) {
   return roomsMap;
 }
 
+// calculateSumDifference
 export function calculateSums(roomsMap) {
-  let firstFloor = new Map();
-  let secondFloor = new Map();
+  const [firstFloorRooms, secondFloorRooms] = separateRoomsByFloor(roomsMap);
 
-  // I separate the rooms by floor
-  // TODO extract function, rf loop into pipeline
-  for (let [room, cleaningTime] of roomsMap) {
-    if (room[0] === '1') {
-      firstFloor.set(room, cleaningTime);
-    } else {
-      secondFloor.set(room, cleaningTime);
-    }
-  }
+  // I should be movedbecause I don't belong inside calculate songs
+  // where should I go? what am I needed for?
+  // I provide the correctly organised date to perform the room balancing
+  // getBalancedRoomLists - replaces getRoomAssignments
+  const firstFloorRoomsByCleaningTime =
+    organiseRoomsByCleaningTime(firstFloorRooms);
+  const secondFloorRoomsByCleaningTime =
+    organiseRoomsByCleaningTime(secondFloorRooms);
 
-  let firstFloorRoomsByCleaningTime = new Map();
-
-  // I organise the rooms according to their cleaning time
-  // TODO extract function, rf loop into pipeline
-  for (let [room, cleaningTime] of firstFloor) {
-    console.log(room, cleaningTime);
-    if (!firstFloorRoomsByCleaningTime.get(cleaningTime)) {
-      firstFloorRoomsByCleaningTime.set(cleaningTime, [room]);
-    } else {
-      const values = firstFloorRoomsByCleaningTime.get(cleaningTime);
-      firstFloorRoomsByCleaningTime.set(cleaningTime, [...values, room]);
-    }
-  }
-
-  const firstFloorSum = sumTotalCleaningTime(firstFloor);
-  const secondFloorSum = sumTotalCleaningTime(secondFloor);
+  const firstFloorSum = sumTotalCleaningTime(firstFloorRooms);
+  const secondFloorSum = sumTotalCleaningTime(secondFloorRooms);
   const sumDifference = Math.abs(firstFloorSum - secondFloorSum);
 
   console.log({
-    // roomsMap,
-    // firstFloor,
-    // secondFloor,
     firstFloorSum,
     secondFloorSum,
     sumDifference,
@@ -111,9 +93,42 @@ export function calculateSums(roomsMap) {
     secondFloorSum,
     sumDifference,
     firstFloorRoomsByCleaningTime,
+    secondFloorRoomsByCleaningTime,
   };
 }
 
+function separateRoomsByFloor(roomsMap) {
+  let firstFloorRooms = new Map();
+  let secondFloorRooms = new Map();
+
+  // TODO extract function, rf loop into pipeline
+  for (let [room, cleaningTime] of roomsMap) {
+    if (room[0] === '1') {
+      firstFloorRooms.set(room, cleaningTime);
+    } else {
+      secondFloorRooms.set(room, cleaningTime);
+    }
+  }
+
+  return [firstFloorRooms, secondFloorRooms];
+}
+
+function organiseRoomsByCleaningTime(floorSeparatedRooms) {
+  let timeOrganisedRooms = new Map();
+
+  // TODO extract function, rf loop into pipeline
+  for (let [room, cleaningTime] of floorSeparatedRooms) {
+    if (!timeOrganisedRooms.get(cleaningTime)) {
+      timeOrganisedRooms.set(cleaningTime, [room]);
+    } else {
+      const rooms = timeOrganisedRooms.get(cleaningTime);
+      timeOrganisedRooms.set(cleaningTime, [...rooms, room]);
+    }
+  }
+  return timeOrganisedRooms;
+}
+
+// put me at the top
 export function getRoomAssignments(rooms) {
   const roomsMap = setRoomsMap(rooms);
   calculateSums(roomsMap);
