@@ -46,20 +46,16 @@ const availableRooms = [
   ['216', 'DDY', 'available', 'departure'],
 ];
 
+//console.assert(); there will never be 0 rooms
 export function getBalancedRoomLists(rooms) {
-  //console.assert(); there will never be 0 rooms
   const roomsMap = setRoomsMap(rooms);
   const [firstFloorRooms, secondFloorRooms] = separateRoomsByFloor(roomsMap);
 
-  // remove me and only calculate sums within the maps
-  const { firstFloorSum, secondFloorSum, sumDifference } =
-    calculateSumDifference({
-      firstFloorRooms,
-      secondFloorRooms,
-    });
-
   const organisedFloor1 = organiseRoomsByCleaningTime(firstFloorRooms);
   const organisedFloor2 = organiseRoomsByCleaningTime(secondFloorRooms);
+
+  const firstFloorSum = sumCleaningTime(organisedFloor1);
+  const secondFloorSum = sumCleaningTime(organisedFloor2);
 
   //* the WIP balancing starts
   // longerRoomsAssignment, shorterRoomsAssignment
@@ -94,12 +90,16 @@ export function getBalancedRoomLists(rooms) {
 
     //* the WIP balancing ends
 
+    const cleaningTimesCleanerA = sumCleaningTime(cleanerA);
+    const cleaningTimesCleanerB = sumCleaningTime(cleanerB);
+
     console.log({
       roomsA,
       cleanerA,
       roomsB,
       cleanerB,
-      stack,
+      cleaningTimesCleanerA,
+      cleaningTimesCleanerB,
     });
   }
 
@@ -171,25 +171,13 @@ export function organiseRoomsByCleaningTime(floorSeparatedRooms) {
   return timeOrganisedRooms;
 }
 
-// sum = (15 * get(15).length) + (30 * get(30).length) + (60 * get(60).length) + (120 * get(120).length)
-// reduce  accumulatingSum + key * value.length
-export function sumTotalCleaningTime(cleaner) {
-  return [...cleaner.values()].reduce((sum, value) => sum + value, 0);
-}
+export function sumCleaningTime(timeOrganisedRooms) {
+  const cleaningTimes = [...timeOrganisedRooms.keys()];
 
-// when I have been replaced, delete me and my helper function
-export function calculateSumDifference(floors) {
-  const { firstFloorRooms, secondFloorRooms } = floors;
-
-  const firstFloorSum = sumTotalCleaningTime(firstFloorRooms);
-  const secondFloorSum = sumTotalCleaningTime(secondFloorRooms);
-  const sumDifference = Math.abs(firstFloorSum - secondFloorSum);
-
-  return {
-    firstFloorSum,
-    secondFloorSum,
-    sumDifference,
-  };
+  return cleaningTimes.reduce((sum, cleaningTime) => {
+    const rooms = timeOrganisedRooms.get(cleaningTime);
+    return sum + cleaningTime * rooms.length;
+  }, 0);
 }
 
 //* main function call for development
