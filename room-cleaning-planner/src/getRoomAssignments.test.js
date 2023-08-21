@@ -7,6 +7,7 @@ import {
   organiseRoomsByCleaningTime,
 } from './getRoomAssignments';
 
+// rather than consts, I should wrap these in beforeEach
 const rooms = [
   ['101', 'DBS', 'till 12.08', 'departure'],
   ['102', 'QDB', 'available', 'departure'],
@@ -112,55 +113,95 @@ describe('organiseRoomsByCleaningTime', () => {
   });
 });
 
-// it should return a whole floor of rooms for each cleaner if the difference is 0
-// it should balance the rooms to assign rooms with the minimal sum difference possible10
 describe('getBalancedRoomLists', () => {
-  // it('should distribute all the rooms between two cleaners', () => {
-  //     expect(
-  //   allRooms.every((room) => cleanerA.has(room) || cleanerB.has(room))
-  // ).toBeTruthy();
-  // });
+  it('should distribute all the rooms between two cleaners', () => {
+    const [cleanerA, cleanerB] = getBalancedRoomLists(rooms);
+    const cleanerArooms = [...cleanerA.values()].flat();
+    const cleanerBrooms = [...cleanerB.values()].flat();
 
-  it.skip('should only assign a room to one cleaner (no duplicate assignments)', () => {
-    const roomsMap = setRoomsMap(mockAvailableRooms);
-    const [cleanerA, cleanerB] = getBalancedRoomLists(roomsMap);
+    expect(
+      rooms.every(
+        (room) =>
+          cleanerArooms.includes(room[0]) || cleanerBrooms.includes(room[0])
+      )
+    ).toBe(true);
+  });
 
-    const cleanerArooms = ['101', '102', '103', '203', '207', '211', '215'];
-    const cleanerBrooms = ['210', '212', '213', '214', '216'];
+  it('should only assign a room to one cleaner (no duplicate assignments)', () => {
+    const [cleanerA, cleanerB] = getBalancedRoomLists(rooms);
+    const cleanerArooms = [...cleanerA.values()].flat();
+    const cleanerBrooms = [...cleanerB.values()].flat();
 
-    cleanerArooms.forEach((roomNumber) => {
-      expect(cleanerA.has(roomNumber)).toBeTruthy();
-      expect(cleanerB.has(roomNumber)).toBeFalsy();
+    const uniqueRoomsA = [
+      '201',
+      '205',
+      '206',
+      '207',
+      '208',
+      '209',
+      '210',
+      '211',
+      '212',
+      '213',
+      '215',
+      '216',
+      '202',
+      '214',
+      '203',
+    ];
+    const uniqueRoomsB = [
+      '101',
+      '104',
+      '105',
+      '106',
+      '107',
+      '108',
+      '109',
+      '110',
+      '111',
+      '112',
+      '113',
+      '116',
+      '117',
+      '102',
+      '103',
+      '114',
+      '115',
+      '204',
+    ];
+
+    uniqueRoomsA.forEach((room) => {
+      expect(cleanerArooms.includes(room)).toBeTruthy();
+      expect(cleanerBrooms.includes(room)).toBeFalsy();
     });
 
-    cleanerBrooms.forEach((roomNumber) => {
-      expect(cleanerA.has(roomNumber)).toBeFalsy();
-      expect(cleanerB.has(roomNumber)).toBeTruthy();
+    uniqueRoomsB.forEach((room) => {
+      expect(cleanerBrooms.includes(room)).toBeTruthy();
+      expect(cleanerArooms.includes(room)).toBeFalsy();
     });
 
-    // Check that there are no duplicate rooms
-    const allRooms = [...cleanerA.keys(), ...cleanerB.keys()];
+    const allRooms = [...cleanerArooms, ...cleanerBrooms];
     const uniqueRooms = new Set(allRooms);
     expect(uniqueRooms.size).toBe(allRooms.length);
   });
 
-  it.skip('should equally divide the room cleaningTimes if possible', () => {
-    const roomsWithEquallyDistributableCleaningTimes = {
-      101: 'DBS',
-      102: 'QDB',
-      103: 'QDS',
-      203: 'OC1',
-      207: 'DDY',
-      210: 'ODY',
-      211: 'DBS',
-      212: 'QDB',
-      213: 'QDS',
-      214: 'OC1',
-      215: 'DDY',
-    };
+  it('should equally divide the room cleaningTimes if possible', () => {
+    const roomsWithEquallyDistributableCleaningTimes = [
+      ['101', 'DBS'],
+      ['102', 'QDB'],
+      ['103', 'QDS'],
+      ['203', 'OC1'],
+      ['207', 'DDY'],
+      ['210', 'ODY'],
+      ['211', 'DBS'],
+      ['212', 'QDB'],
+      ['213', 'QDS'],
+      ['214', 'OC1'],
+      ['215', 'DDY'],
+    ];
 
     const [cleanerA, cleanerB] = getBalancedRoomLists(
-      setRoomsMap(roomsWithEquallyDistributableCleaningTimes)
+      roomsWithEquallyDistributableCleaningTimes
     );
 
     const totalCleaningTimeCleanerA = sumTotalCleaningTime(cleanerA);
@@ -225,7 +266,7 @@ describe('getBalancedRoomLists', () => {
     expect(timeDifference).toBeLessThanOrEqual(30);
   });
 
-  // it('should maximize the number of rooms on the same floor for each cleaners (.e.g, cleanerA mostly has floor 1 rooms')
+  // it(should give most rooms on one floor to the same cleaner)
 
   // edgecase: 0 or 1 room to clean should never happen for this usecase
   // edgecase: 1 or 3+ cleaners should never happen for this usecase

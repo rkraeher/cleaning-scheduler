@@ -46,14 +46,80 @@ const availableRooms = [
   ['216', 'DDY', 'available', 'departure'],
 ];
 
-export function sumTotalCleaningTime(cleaner) {
-  return [...cleaner.values()].reduce((sum, value) => sum + value, 0);
+export function getBalancedRoomLists(rooms) {
+  //console.assert(); there will never be 0 rooms
+  const roomsMap = setRoomsMap(rooms);
+  const [firstFloorRooms, secondFloorRooms] = separateRoomsByFloor(roomsMap);
+
+  // remove me and only calculate sums within the maps
+  const { firstFloorSum, secondFloorSum, sumDifference } =
+    calculateSumDifference({
+      firstFloorRooms,
+      secondFloorRooms,
+    });
+
+  const organisedFloor1 = organiseRoomsByCleaningTime(firstFloorRooms);
+  const organisedFloor2 = organiseRoomsByCleaningTime(secondFloorRooms);
+
+  //* the WIP balancing starts
+  // longerRoomsAssignment, shorterRoomsAssignment
+  const [cleanerA, cleanerB] =
+    firstFloorSum > secondFloorSum
+      ? [organisedFloor1, organisedFloor2]
+      : [organisedFloor2, organisedFloor1];
+
+  //   while (sumDifference >= 30){}
+  if (
+    // for testing the sumDif condition is removed
+    // sumDif >= 120 &&
+    // cleanerA and cleanerB should be replaced by sorted 'largerCleaner' and 'smallerCleaner
+    cleanerA.has(120)
+  ) {
+    // remove one line of 120 from setOfBig
+    let stack = [];
+    let roomsA = cleanerA.get(120);
+    let roomsB = cleanerB.get(120) ?? [];
+
+    stack.push(roomsA[roomsA.length - 1]);
+    roomsA.pop();
+    // add it to small
+    roomsB.push(stack[0]);
+
+    // set new values for cleaners
+    cleanerA.set(120, roomsA);
+    cleanerB.set(120, roomsB);
+
+    // recheck the sum dif, which must stay up to date with the mutated cleaner lists;
+    // possible recursive call?
+
+    //* the WIP balancing ends
+
+    console.log({
+      roomsA,
+      cleanerA,
+      roomsB,
+      cleanerB,
+      stack,
+    });
+  }
+
+  return [cleanerA, cleanerB];
 }
 
+// its more like, mapCleaningTimesToRooms / getListOfRoomsWithCleaningTimes but I like the short and simple name in this case
+// getRoomsWithTimes / mapRoomsAndTimes
 export function setRoomsMap(rooms) {
   let roomsMap = new Map();
 
-  // TODO rf me into pipeline collection?s
+  // for (const [roomNumber, cleaningTimeCode, , roomState] of rooms) {
+  //     const cleaningTime =
+  //       roomState === roomStates.STAY
+  //         ? CLEANING_TIMES_IN_MINUTES['STAY']
+  //         : CLEANING_TIMES_IN_MINUTES[cleaningTimeCode[0]];
+  // only the first letter from the timeCodes cell is needed to set the cleaningTimeForOneRoom
+
+  //     roomsMap.set(roomNumber, cleaningTime);
+  //   }
   for (const [roomNumber, cleaningTimeCode, , roomState] of rooms) {
     if (roomState === roomStates.STAY) {
       roomsMap.set(roomNumber, CLEANING_TIMES_IN_MINUTES['STAY']);
@@ -65,25 +131,14 @@ export function setRoomsMap(rooms) {
   return roomsMap;
 }
 
-export function calculateSumDifference(floors) {
-  const { firstFloorRooms, secondFloorRooms } = floors;
-
-  const firstFloorSum = sumTotalCleaningTime(firstFloorRooms);
-  const secondFloorSum = sumTotalCleaningTime(secondFloorRooms);
-  const sumDifference = Math.abs(firstFloorSum - secondFloorSum);
-
-  return {
-    firstFloorSum,
-    secondFloorSum,
-    sumDifference,
-  };
-}
-
 export function separateRoomsByFloor(roomsMap) {
   let firstFloorRooms = new Map();
   let secondFloorRooms = new Map();
 
-  // TODO extract function, rf loop into pipeline
+  //   for (let [room, cleaningTime] of roomsMap) {
+  //     const targetFloor = room[0] === '1' ? firstFloorRooms : secondFloorRooms;
+  //     targetFloor.set(room, cleaningTime);
+  //   }
   for (let [room, cleaningTime] of roomsMap) {
     if (room[0] === '1') {
       firstFloorRooms.set(room, cleaningTime);
@@ -98,7 +153,12 @@ export function separateRoomsByFloor(roomsMap) {
 export function organiseRoomsByCleaningTime(floorSeparatedRooms) {
   let timeOrganisedRooms = new Map();
 
-  // TODO extract function, rf loop into pipeline
+  // for (let [room, cleaningTime] of floorSeparatedRooms) {
+  //   const rooms = timeOrganisedRooms.get(cleaningTime) || [];
+  //   timeOrganisedRooms.set(cleaningTime, [...rooms, room]);
+  // }
+
+  // timeOrganisedRooms.set('totalSum', totalSum);
   for (let [room, cleaningTime] of floorSeparatedRooms) {
     if (!timeOrganisedRooms.get(cleaningTime)) {
       timeOrganisedRooms.set(cleaningTime, [room]);
@@ -107,32 +167,30 @@ export function organiseRoomsByCleaningTime(floorSeparatedRooms) {
       timeOrganisedRooms.set(cleaningTime, [...rooms, room]);
     }
   }
+
   return timeOrganisedRooms;
 }
 
-// put me at the top and change module name
-export function getBalancedRoomLists(rooms) {
-  const roomsMap = setRoomsMap(rooms);
-  const [firstFloorRooms, secondFloorRooms] = separateRoomsByFloor(roomsMap);
-
-  // both calculateSumDif and organiseRooms accept the output from separateRooms
-  // I could rf separateRooms to output one, destructurable object
-  const sumDifferenceBetweenFloors = calculateSumDifference({
-    firstFloorRooms,
-    secondFloorRooms,
-  });
-
-  const firstFloorRoomsByCleaningTime =
-    organiseRoomsByCleaningTime(firstFloorRooms);
-  const secondFloorRoomsByCleaningTime =
-    organiseRoomsByCleaningTime(secondFloorRooms);
-
-  console.log({
-    sumDifferenceBetweenFloors,
-    firstFloorRoomsByCleaningTime,
-    secondFloorRoomsByCleaningTime,
-  });
-  return null;
+// sum = (15 * get(15).length) + (30 * get(30).length) + (60 * get(60).length) + (120 * get(120).length)
+// reduce  accumulatingSum + key * value.length
+export function sumTotalCleaningTime(cleaner) {
+  return [...cleaner.values()].reduce((sum, value) => sum + value, 0);
 }
 
+// when I have been replaced, delete me and my helper function
+export function calculateSumDifference(floors) {
+  const { firstFloorRooms, secondFloorRooms } = floors;
+
+  const firstFloorSum = sumTotalCleaningTime(firstFloorRooms);
+  const secondFloorSum = sumTotalCleaningTime(secondFloorRooms);
+  const sumDifference = Math.abs(firstFloorSum - secondFloorSum);
+
+  return {
+    firstFloorSum,
+    secondFloorSum,
+    sumDifference,
+  };
+}
+
+//* main function call for development
 getBalancedRoomLists(availableRooms);
