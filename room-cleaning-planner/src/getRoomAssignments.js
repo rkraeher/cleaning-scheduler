@@ -49,104 +49,73 @@ const availableRooms = [
 //console.assert(); there will never be 0 rooms
 export function getBalancedRoomLists(rooms) {
   const roomsMap = setRoomsMap(rooms);
-  const [firstFloorRooms, secondFloorRooms] = separateRoomsByFloor(roomsMap);
+  const totalCleaningTime = sumCleaningTime(roomsMap);
+  const halfTotalCleaningTime = getRoundedHalfCleaningTime(totalCleaningTime);
 
-  const organisedFloor1 = organiseRoomsByCleaningTime(firstFloorRooms);
-  const organisedFloor2 = organiseRoomsByCleaningTime(secondFloorRooms);
+  // 1. loop to add up to the half sum to cleanerA, the rest to cleanerB
+  // 2. return cleanerA and B / check tests
+  const { roomsListA, roomsListB } = getRoomsLists(roomsMap);
+  // 3. implement balanceRoomLists
 
-  //   const [balancedRoomsListA, balancedRoomsListB] = balanceRoomLists(organisedFloor1, organisedFloor2);
+  // for dev purposes
+  const sumA = sumCleaningTime(roomsListA);
+  const sumB = sumCleaningTime(roomsListB);
 
-  //* call during dev
-  balanceRoomLists(organisedFloor1, organisedFloor2);
+  console.log({
+    roomsMap,
+    totalCleaningTime,
+    halfTotalCleaningTime,
+    roomsListA,
+    roomsListB,
+    sumA,
+    sumB,
+  });
+  return { roomsListA, roomsListB };
 
-  // the test breaks if I reverse the order
-  return [organisedFloor2, organisedFloor1];
+  function getRoundedHalfCleaningTime(totalCleaningTime) {
+    const halfTotalCleaningTime = totalCleaningTime / 2;
+    const stayTime = CLEANING_TIMES_IN_MINUTES.STAY;
+    const roundedHalfCleaningTime =
+      Math.round(halfTotalCleaningTime / stayTime) * stayTime;
+    return roundedHalfCleaningTime;
+  }
+
+  function getRoomsLists(roomsMap) {
+    const roomsListA = new Map();
+    const roomsListB = new Map();
+
+    for (const [room, time] of roomsMap) {
+      if (sumCleaningTime(roomsListA) + time <= halfTotalCleaningTime) {
+        roomsListA.set(room, time);
+      } else {
+        roomsListB.set(room, time);
+      }
+    }
+
+    return {
+      roomsListA,
+      roomsListB,
+    };
+  }
 }
 
-// its more like, mapCleaningTimesToRooms / getListOfRoomsWithCleaningTimes but I like the short and simple name in this case
-// getRoomsWithTimes / mapRoomsAndTimes
 export function setRoomsMap(rooms) {
   let roomsMap = new Map();
 
-  // for (const [roomNumber, cleaningTimeCode, , roomState] of rooms) {
-  //     const cleaningTime =
-  //       roomState === roomStates.STAY
-  //         ? CLEANING_TIMES_IN_MINUTES['STAY']
-  //         : CLEANING_TIMES_IN_MINUTES[cleaningTimeCode[0]];
-  // only the first letter from the timeCodes cell is needed to set the cleaningTimeForOneRoom
-
-  //     roomsMap.set(roomNumber, cleaningTime);
-  //   }
   for (const [roomNumber, cleaningTimeCode, , roomState] of rooms) {
-    if (roomState === roomStates.STAY) {
-      roomsMap.set(roomNumber, CLEANING_TIMES_IN_MINUTES['STAY']);
-    } else {
-      // only the first letter from the timeCodes cell is needed to set the cleaningTimeForOneRoom
-      roomsMap.set(roomNumber, CLEANING_TIMES_IN_MINUTES[cleaningTimeCode[0]]);
-    }
+    const cleaningTime =
+      roomState === roomStates.STAY
+        ? CLEANING_TIMES_IN_MINUTES['STAY']
+        : CLEANING_TIMES_IN_MINUTES[cleaningTimeCode[0]];
+    // only the first letter from the timeCodes cell is needed to set the cleaningTime for a room
+
+    roomsMap.set(roomNumber, cleaningTime);
   }
   return roomsMap;
 }
 
-export function separateRoomsByFloor(roomsMap) {
-  let firstFloorRooms = new Map();
-  let secondFloorRooms = new Map();
-
-  //   for (let [room, cleaningTime] of roomsMap) {
-  //     const targetFloor = room[0] === '1' ? firstFloorRooms : secondFloorRooms;
-  //     targetFloor.set(room, cleaningTime);
-  //   }
-  for (let [room, cleaningTime] of roomsMap) {
-    if (room[0] === '1') {
-      firstFloorRooms.set(room, cleaningTime);
-    } else {
-      secondFloorRooms.set(room, cleaningTime);
-    }
-  }
-
-  return [firstFloorRooms, secondFloorRooms];
-}
-
-export function organiseRoomsByCleaningTime(floorSeparatedRooms) {
-  let timeOrganisedRooms = new Map();
-
-  // for (let [room, cleaningTime] of floorSeparatedRooms) {
-  //   const rooms = timeOrganisedRooms.get(cleaningTime) || [];
-  //   timeOrganisedRooms.set(cleaningTime, [...rooms, room]);
-  // }
-
-  // timeOrganisedRooms.set('totalSum', totalSum);
-  for (let [room, cleaningTime] of floorSeparatedRooms) {
-    if (!timeOrganisedRooms.get(cleaningTime)) {
-      timeOrganisedRooms.set(cleaningTime, [room]);
-    } else {
-      const rooms = timeOrganisedRooms.get(cleaningTime);
-      timeOrganisedRooms.set(cleaningTime, [...rooms, room]);
-    }
-  }
-
-  return timeOrganisedRooms;
-}
-
-// move me below balanceRoomLists
-export function sumCleaningTime(timeOrganisedRooms) {
-  const cleaningTimes = [...timeOrganisedRooms.keys()];
-
-  return cleaningTimes.reduce((sum, cleaningTime) => {
-    const rooms = timeOrganisedRooms.get(cleaningTime);
-    return sum + cleaningTime * rooms.length;
-  }, 0);
-}
-
 function balanceRoomLists(organisedRoomsA, organisedRoomsB) {
-  const sumCleaningTimesA = sumCleaningTime(organisedRoomsA);
-  const sumCleaningTimesB = sumCleaningTime(organisedRoomsB);
-
   // const sumDifference = Math.abs(sumCleaningTimesA - sumCleaningTimesB);
-
-  const sumDifference =
-    Math.max(sumCleaningTimesA, sumCleaningTimesB) -
-    Math.min(sumCleaningTimesA, sumCleaningTimesB);
 
   if (sumDifference <= 30) return { organisedRoomsA, organisedRoomsB };
 
@@ -173,8 +142,12 @@ function balanceRoomLists(organisedRoomsA, organisedRoomsB) {
       );
     }
 
-    console.log({ longerRoomsList, shorterRoomsList, sumDifference, key });
+    // console.log({ longerRoomsList, shorterRoomsList, sumDifference, key });
   }
+}
+
+export function sumCleaningTime(rooms) {
+  return [...rooms.values()].reduce((sum, time) => sum + time, 0);
 }
 
 //* main function call for development

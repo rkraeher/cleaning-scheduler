@@ -2,11 +2,8 @@ import {
   getBalancedRoomLists,
   setRoomsMap,
   sumCleaningTime,
-  separateRoomsByFloor,
-  organiseRoomsByCleaningTime,
 } from './getRoomAssignments';
 
-// rather than consts, I should wrap these in beforeEach
 const rooms = [
   ['101', 'DBS', 'till 12.08', 'departure'],
   ['102', 'QDB', 'available', 'departure'],
@@ -43,113 +40,38 @@ const rooms = [
   ['216', 'DDY', 'available', 'departure'],
 ];
 
-const roomsMap = setRoomsMap(rooms);
-const [firstFloorRooms, secondFloorRooms] = separateRoomsByFloor(roomsMap);
-
-describe('separateRoomsByFloor', () => {
-  it('should separate the rooms according to their floor', () => {
-    const smallRoomsMap = new Map([
-      ['101', 30],
-      ['102', 60],
-      ['201', 15],
-      ['202', 30],
-    ]);
-
-    const [firstFloorRooms, secondFloorRooms] =
-      separateRoomsByFloor(smallRoomsMap);
-
-    expect(firstFloorRooms.size).toBe(2);
-    expect(firstFloorRooms.get('101')).toBe(30);
-    expect(firstFloorRooms.get('102')).toBe(60);
-
-    expect(secondFloorRooms.size).toBe(2);
-    expect(secondFloorRooms.get('201')).toBe(15);
-    expect(secondFloorRooms.get('202')).toBe(30);
-  });
-});
-
 describe('sumCleaningTime', () => {
   it('should calculate the sum cleaningTime for a list of rooms', () => {
-    const rooms = organiseRoomsByCleaningTime(firstFloorRooms);
-    const result = sumCleaningTime(rooms);
-    const expectedSum = 630;
+    const roomsMap = setRoomsMap(rooms);
+    const result = sumCleaningTime(roomsMap);
+    const expectedSum = 1350;
 
     expect(result).toBe(expectedSum);
   });
 });
 
-describe('organiseRoomsByCleaningTime', () => {
-  it('should organize the rooms on each floor based on their cleaningTime', () => {
-    const expectedRoomsOrganizedByCleaningTime = new Map([
-      [
-        30,
-        [
-          '101',
-          '104',
-          '105',
-          '106',
-          '107',
-          '108',
-          '109',
-          '110',
-          '111',
-          '112',
-          '113',
-          '116',
-          '117',
-        ],
-      ],
-      [60, ['102', '103', '114', '115']],
-    ]);
-
-    const firstFloorRoomsByCleaningTime =
-      organiseRoomsByCleaningTime(firstFloorRooms);
-
-    expect(firstFloorRoomsByCleaningTime).toEqual(
-      expectedRoomsOrganizedByCleaningTime
-    );
-  });
-});
-
 describe('getBalancedRoomLists', () => {
   it('should distribute all the rooms between two cleaners', () => {
-    const [cleanerA, cleanerB] = getBalancedRoomLists(rooms);
-    const cleanerArooms = [...cleanerA.values()].flat();
-    const cleanerBrooms = [...cleanerB.values()].flat();
+    const { roomsListA, roomsListB } = getBalancedRoomLists(rooms);
+    const roomsA = [...roomsListA.keys()];
+    const roomsB = [...roomsListB.keys()];
 
     expect(
       rooms.every(
-        (room) =>
-          cleanerArooms.includes(room[0]) || cleanerBrooms.includes(room[0])
+        (room) => roomsA.includes(room[0]) || roomsB.includes(room[0])
       )
     ).toBe(true);
   });
 
   it('should only assign a room to one cleaner (no duplicate assignments)', () => {
-    const [cleanerA, cleanerB] = getBalancedRoomLists(rooms);
-    const cleanerArooms = [...cleanerA.values()].flat();
-    const cleanerBrooms = [...cleanerB.values()].flat();
+    const { roomsListA, roomsListB } = getBalancedRoomLists(rooms);
+    const roomsA = [...roomsListA.keys()];
+    const roomsB = [...roomsListB.keys()];
 
     const uniqueRoomsA = [
-      '201',
-      '205',
-      '206',
-      '207',
-      '208',
-      '209',
-      '210',
-      '211',
-      '212',
-      '213',
-      '215',
-      '216',
-      '202',
-      '214',
-      '203',
-      '204',
-    ];
-    const uniqueRoomsB = [
       '101',
+      '102',
+      '103',
       '104',
       '105',
       '106',
@@ -160,25 +82,41 @@ describe('getBalancedRoomLists', () => {
       '111',
       '112',
       '113',
-      '116',
-      '117',
-      '102',
-      '103',
       '114',
       '115',
+      '116',
+      '117',
+      '201',
+    ];
+    const uniqueRoomsB = [
+      '202',
+      '203',
+      '204',
+      '205',
+      '206',
+      '207',
+      '208',
+      '209',
+      '210',
+      '211',
+      '212',
+      '213',
+      '214',
+      '215',
+      '216',
     ];
 
     uniqueRoomsA.forEach((room) => {
-      expect(cleanerArooms.includes(room)).toBeTruthy();
-      expect(cleanerBrooms.includes(room)).toBeFalsy();
+      expect(roomsA.includes(room)).toBeTruthy();
+      expect(roomsB.includes(room)).toBeFalsy();
     });
 
     uniqueRoomsB.forEach((room) => {
-      expect(cleanerBrooms.includes(room)).toBeTruthy();
-      expect(cleanerArooms.includes(room)).toBeFalsy();
+      expect(roomsB.includes(room)).toBeTruthy();
+      expect(roomsA.includes(room)).toBeFalsy();
     });
 
-    const allRooms = [...cleanerArooms, ...cleanerBrooms];
+    const allRooms = [...roomsA, ...roomsB];
     const uniqueRooms = new Set(allRooms);
     expect(uniqueRooms.size).toBe(allRooms.length);
   });
@@ -200,19 +138,18 @@ describe('getBalancedRoomLists', () => {
       ['215', 'DDY'],
     ];
 
-    const [cleanerA, cleanerB] = getBalancedRoomLists(
+    const { roomsListA, roomsListB } = getBalancedRoomLists(
       roomsWithEquallyDistributableCleaningTimes
     );
 
-    const totalCleaningTimeCleanerA = sumCleaningTime(cleanerA);
-    const totalCleaningTimeCleanerB = sumCleaningTime(cleanerB);
+    const totalCleaningTimeCleanerA = sumCleaningTime(roomsListA);
+    const totalCleaningTimeCleanerB = sumCleaningTime(roomsListB);
 
     expect(totalCleaningTimeCleanerA).toEqual(totalCleaningTimeCleanerB);
   });
 
-  // or, should balance an uneven cleaningTime
   it('should handle a totalCleaningTime that cannot be equally divided', () => {
-    const roomsWithUnequallyDistributableCleaningTimes = [
+    const rooms = [
       ['101', 'OBS'],
       ['102', 'ODB'],
       ['103', 'ODS'],
@@ -227,54 +164,47 @@ describe('getBalancedRoomLists', () => {
       ['213', 'QDS'],
       ['214', 'QC1'],
       ['215', 'DDY'],
+      // An odd number of stays will produce a total cleaningTime that can never be equally divided in half
+      ['218', 'DBI', 'available', 'stay'],
     ];
-    const [cleanerA, cleanerB] = getBalancedRoomLists(
-      roomsWithUnequallyDistributableCleaningTimes
-    );
+    const { roomsListA, roomsListB } = getBalancedRoomLists(rooms);
 
-    const totalCleaningTimeCleanerA = sumCleaningTime(cleanerA);
-    const totalCleaningTimeCleanerB = sumCleaningTime(cleanerB);
+    const totalCleaningTimeCleanerA = sumCleaningTime(roomsListA);
+    const totalCleaningTimeCleanerB = sumCleaningTime(roomsListB);
+
     const oddNumberedTotalCleaningTime =
       totalCleaningTimeCleanerA + totalCleaningTimeCleanerB;
 
-    console.log({ totalCleaningTimeCleanerA, totalCleaningTimeCleanerB });
     expect(oddNumberedTotalCleaningTime % 2 == 1).toBeTruthy();
     expect(totalCleaningTimeCleanerA).not.toEqual(totalCleaningTimeCleanerB);
   });
 
-  it.skip('should minimize the cleaningTime difference between both cleaners', () => {
-    const roomsWithUnequallyDistributableCleaningTimes = {
-      101: 'ABS',
-      102: 'QDB',
-      103: 'QDS',
-      203: 'OC1',
-      207: 'DDY',
-      210: 'ODY',
-      211: 'DBS',
-      212: 'QDB',
-      213: 'QDS',
-      214: 'OC1',
-      215: 'DDY',
-      216: 'DDY',
-    };
+  it('should minimize the cleaningTime difference between both cleaners', () => {
+    const rooms = [
+      ['101', 'O'],
+      ['102', 'O'],
+      ['103', 'Q'],
+      ['104', 'Q'],
+      ['105', 'Q'],
+      ['106', 'Q'],
+      ['107', 'D'],
+      ['108', 'DBI', 'available', 'stay'],
+      ['109', 'DBI', 'available', 'stay'],
+      ['110', 'DBI', 'available', 'stay'],
+    ];
 
-    const [cleanerA, cleanerB] = getBalancedRoomLists(
-      setRoomsMap(roomsWithUnequallyDistributableCleaningTimes)
-    );
+    const { roomsListA, roomsListB } = getBalancedRoomLists(rooms);
+    const acceptedMarginOfDifference = 30;
 
-    // changed sum method
-    // const totalCleaningTimeCleanerA = sumTotalCleaningTime(cleanerA);
-    // const totalCleaningTimeCleanerB = sumTotalCleaningTime(cleanerB);
+    const totalCleaningTimeCleanerA = sumCleaningTime(roomsListA);
+    const totalCleaningTimeCleanerB = sumCleaningTime(roomsListB);
 
     const timeDifference = Math.abs(
       totalCleaningTimeCleanerA - totalCleaningTimeCleanerB
     );
 
-    expect(timeDifference).toBeLessThanOrEqual(30);
+    expect(timeDifference).toBeLessThanOrEqual(acceptedMarginOfDifference);
   });
 
   // it(should give most rooms on one floor to the same cleaner)
-
-  // edgecase: 0 or 1 room to clean should never happen for this usecase
-  // edgecase: 1 or 3+ cleaners should never happen for this usecase
 });
