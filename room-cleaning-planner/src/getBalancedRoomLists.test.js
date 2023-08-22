@@ -2,7 +2,7 @@ import {
   getBalancedRoomLists,
   mapRoomsToCleaningTimes,
   sumCleaningTime,
-} from './getRoomAssignments';
+} from './getBalancedRoomLists';
 
 const rooms = [
   ['101', 'DBS', 'till 12.08', 'departure'],

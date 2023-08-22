@@ -1,6 +1,5 @@
 import React from 'react';
 import { read, utils } from 'xlsx';
-// import { roomStates } from './assets/constants';
 
 const roomStates = {
   DEPARTURE: 'departure',
