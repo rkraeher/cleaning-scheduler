@@ -58,3 +58,6 @@ describe('parseRows', () => {
     expect(parseRows(data)).toEqual([]);
   });
 });
+
+// TODO add tests for parseAvailability
+// Consider the failing cases and bad date - we should elegantly handle when the input causes the program to crash

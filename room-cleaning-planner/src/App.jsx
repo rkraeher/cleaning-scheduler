@@ -1,7 +1,6 @@
 import React from 'react';
 import { read, utils } from 'xlsx';
 // import { roomStates } from './assets/constants';
-// import { setRoomsMap } from './assets/script';
 
 const roomStates = {
   DEPARTURE: 'departure',
@@ -43,12 +42,13 @@ export function parseRow(row) {
   return parsedRow;
 }
 
-// for later: use filter() instead of this loop
 export function parseRows(data) {
+  // const is ok here?
   let parsedRows = [];
   for (let i = 0; i < data.length; i++) {
     // data[i][0] is roomNumber cell
     if (data[i][0] && isNumberAsString(data[i][0])) {
+      // const?
       let parsedRow = parseRow(data[i]);
       parsedRows.push([...parsedRow]);
     }
@@ -78,11 +78,10 @@ function isDeparture(date) {
   const currentDate = new Date();
 
   // weird behaviour when working with out of date. e.g., everything before today 15.8 is 'considered stay
-  // maybe better not to use math absolute here
-  const differenceInTime =
-    // Math.abs(
-    departureDate.getTime() - currentDate.getTime();
-  //);
+  // consider removing Math.abs, and console.assert() that deparatureDate is after currentDate
+  const differenceInTime = Math.abs(
+    departureDate.getTime() - currentDate.getTime()
+  );
   const differenceInDays = Math.ceil(differenceInTime / (1000 * 60 * 60 * 24));
 
   return differenceInDays < 2;
@@ -92,21 +91,23 @@ function parseAvailability(rooms = []) {
   for (let room of rooms) {
     let dateString = room[2].split(' ')[1];
 
+    // room.includes('available') || isDeparture(dateString)
+    //   ? room.push(roomStates.DEPARTURE)
+    //   : room.push(roomStates.STAY);
     if (room.includes('available') || isDeparture(dateString)) {
       room.push(roomStates.DEPARTURE);
     } else {
       room.push(roomStates.STAY);
     }
   }
-  console.log({ rooms });
+
   return rooms;
 }
 
-// make FileUpload a separate component
+// make FileUpload a separate component file
 function FileUpload() {
   const handleFile = async (e) => {
     const file = e.target.files[0];
-    // why is this being awaited? bc arrayBuffer() returns a Promise
     const data = await file.arrayBuffer();
     const workbook = read(data);
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -122,19 +123,7 @@ function FileUpload() {
     const parsedData = parseRows(jsonData);
     const parsedRooms = parseAvailability(parsedData);
 
-    // why does setRoomsMaps work but not the full getRoomsAssignments script?
-    // const roomsMap = setRoomsMap(parsedRooms);
-    // console.log({ roomsMap });
-
-    // promise chain .then ? setting state/passing props? return getRoomAssignments? web workers?
-    // https://stackoverflow.com/questions/37576685/using-async-await-with-a-foreach-loop
-    // I need to figure out what the problem is. Is it b/c this function is a long-running task?
-    // copy/paste the parsedData and hard code run it through the program to see if it works
-    // time the function
-    // use debugger to see if/where it breaks down or if the execution order is messed up
-
-    // const [cleanerA, cleanerB] = getRoomAssignments(roomsMap);
-    // console.log({ cleanerA, cleanerB });
+    // pass parsedRooms to the script for balancing
   };
   return (
     <div>
