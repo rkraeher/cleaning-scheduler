@@ -146,6 +146,7 @@ describe('getBalancedRoomLists', () => {
       '202',
       '214',
       '203',
+      '204',
     ];
     const uniqueRoomsB = [
       '101',
@@ -165,7 +166,6 @@ describe('getBalancedRoomLists', () => {
       '103',
       '114',
       '115',
-      '204',
     ];
 
     uniqueRoomsA.forEach((room) => {
@@ -185,16 +185,18 @@ describe('getBalancedRoomLists', () => {
 
   it('should equally divide the room cleaningTimes if possible', () => {
     const roomsWithEquallyDistributableCleaningTimes = [
-      ['101', 'DBS'],
-      ['102', 'QDB'],
-      ['103', 'QDS'],
+      ['101', 'OBS'],
+      ['102', 'ODB'],
+      ['103', 'ODS'],
+      ['104', 'ODS'],
+      ['202', 'DDS'],
       ['203', 'OC1'],
       ['207', 'DDY'],
-      ['210', 'ODY'],
+      ['210', 'QDY'],
       ['211', 'DBS'],
       ['212', 'QDB'],
       ['213', 'QDS'],
-      ['214', 'OC1'],
+      ['214', 'QC1'],
       ['215', 'DDY'],
     ];
 
@@ -202,38 +204,42 @@ describe('getBalancedRoomLists', () => {
       roomsWithEquallyDistributableCleaningTimes
     );
 
-    // changed the sum method
-    // const totalCleaningTimeCleanerA = sumTotalCleaningTime(cleanerA);
-    // const totalCleaningTimeCleanerB = sumTotalCleaningTime(cleanerB);
+    const totalCleaningTimeCleanerA = sumCleaningTime(cleanerA);
+    const totalCleaningTimeCleanerB = sumCleaningTime(cleanerB);
 
-    // expect(totalCleaningTimeCleanerA).toEqual(totalCleaningTimeCleanerB);
+    expect(totalCleaningTimeCleanerA).toEqual(totalCleaningTimeCleanerB);
   });
 
-  it.skip('should handle a totalCleaningTime that cannot be equally divided', () => {
-    const roomsWithOddNumberedTotalCleaningTime = {
-      101: 'ABS',
-      102: 'QDB',
-      103: 'QDS',
-      203: 'OC1',
-      207: 'DDY',
-      210: 'ODY',
-      211: 'DBS',
-      212: 'QDB',
-      213: 'QDS',
-      214: 'OC1',
-      215: 'DDY',
-      216: 'DDY',
-    };
+  // or, should balance an uneven cleaningTime
+  it('should handle a totalCleaningTime that cannot be equally divided', () => {
+    const roomsWithUnequallyDistributableCleaningTimes = [
+      ['101', 'OBS'],
+      ['102', 'ODB'],
+      ['103', 'ODS'],
+      ['104', 'ODS'],
+      ['105', 'QBS'],
+      ['202', 'DDS'],
+      ['203', 'OC1'],
+      ['207', 'DDY'],
+      ['210', 'QDY'],
+      ['211', 'DBS'],
+      ['212', 'QDB'],
+      ['213', 'QDS'],
+      ['214', 'QC1'],
+      ['215', 'DDY'],
+    ];
+    const [cleanerA, cleanerB] = getBalancedRoomLists(
+      roomsWithUnequallyDistributableCleaningTimes
+    );
 
-    const roomsMap = setRoomsMap(roomsWithOddNumberedTotalCleaningTime);
-    const [cleanerA, cleanerB] = getBalancedRoomLists(roomsMap);
-    // changed sum method
-    // const oddNumberedTotalCleaningTime = sumTotalCleaningTime(roomsMap);
-    // const totalCleaningTimeCleanerA = sumTotalCleaningTime(cleanerA);
-    // const totalCleaningTimeCleanerB = sumTotalCleaningTime(cleanerB);
+    const totalCleaningTimeCleanerA = sumCleaningTime(cleanerA);
+    const totalCleaningTimeCleanerB = sumCleaningTime(cleanerB);
+    const oddNumberedTotalCleaningTime =
+      totalCleaningTimeCleanerA + totalCleaningTimeCleanerB;
 
-    // expect(oddNumberedTotalCleaningTime % 2 == 1).toBeTruthy();
-    // expect(totalCleaningTimeCleanerA).not.toEqual(totalCleaningTimeCleanerB);
+    console.log({ totalCleaningTimeCleanerA, totalCleaningTimeCleanerB });
+    expect(oddNumberedTotalCleaningTime % 2 == 1).toBeTruthy();
+    expect(totalCleaningTimeCleanerA).not.toEqual(totalCleaningTimeCleanerB);
   });
 
   it.skip('should minimize the cleaningTime difference between both cleaners', () => {

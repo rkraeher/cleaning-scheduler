@@ -54,56 +54,13 @@ export function getBalancedRoomLists(rooms) {
   const organisedFloor1 = organiseRoomsByCleaningTime(firstFloorRooms);
   const organisedFloor2 = organiseRoomsByCleaningTime(secondFloorRooms);
 
-  const firstFloorSum = sumCleaningTime(organisedFloor1);
-  const secondFloorSum = sumCleaningTime(organisedFloor2);
+  //   const [balancedRoomsListA, balancedRoomsListB] = balanceRoomLists(organisedFloor1, organisedFloor2);
 
-  //* the WIP balancing starts
-  // longerRoomsAssignment, shorterRoomsAssignment
-  const [cleanerA, cleanerB] =
-    firstFloorSum > secondFloorSum
-      ? [organisedFloor1, organisedFloor2]
-      : [organisedFloor2, organisedFloor1];
+  //* call during dev
+  balanceRoomLists(organisedFloor1, organisedFloor2);
 
-  //   while (sumDifference >= 30){}
-  if (
-    // for testing the sumDif condition is removed
-    // sumDif >= 120 &&
-    // cleanerA and cleanerB should be replaced by sorted 'largerCleaner' and 'smallerCleaner
-    cleanerA.has(120)
-  ) {
-    // remove one line of 120 from setOfBig
-    let stack = [];
-    let roomsA = cleanerA.get(120);
-    let roomsB = cleanerB.get(120) ?? [];
-
-    stack.push(roomsA[roomsA.length - 1]);
-    roomsA.pop();
-    // add it to small
-    roomsB.push(stack[0]);
-
-    // set new values for cleaners
-    cleanerA.set(120, roomsA);
-    cleanerB.set(120, roomsB);
-
-    // recheck the sum dif, which must stay up to date with the mutated cleaner lists;
-    // possible recursive call?
-
-    //* the WIP balancing ends
-
-    const cleaningTimesCleanerA = sumCleaningTime(cleanerA);
-    const cleaningTimesCleanerB = sumCleaningTime(cleanerB);
-
-    console.log({
-      roomsA,
-      cleanerA,
-      roomsB,
-      cleanerB,
-      cleaningTimesCleanerA,
-      cleaningTimesCleanerB,
-    });
-  }
-
-  return [cleanerA, cleanerB];
+  // the test breaks if I reverse the order
+  return [organisedFloor2, organisedFloor1];
 }
 
 // its more like, mapCleaningTimesToRooms / getListOfRoomsWithCleaningTimes but I like the short and simple name in this case
@@ -171,6 +128,7 @@ export function organiseRoomsByCleaningTime(floorSeparatedRooms) {
   return timeOrganisedRooms;
 }
 
+// move me below balanceRoomLists
 export function sumCleaningTime(timeOrganisedRooms) {
   const cleaningTimes = [...timeOrganisedRooms.keys()];
 
@@ -178,6 +136,45 @@ export function sumCleaningTime(timeOrganisedRooms) {
     const rooms = timeOrganisedRooms.get(cleaningTime);
     return sum + cleaningTime * rooms.length;
   }, 0);
+}
+
+function balanceRoomLists(organisedRoomsA, organisedRoomsB) {
+  const sumCleaningTimesA = sumCleaningTime(organisedRoomsA);
+  const sumCleaningTimesB = sumCleaningTime(organisedRoomsB);
+
+  // const sumDifference = Math.abs(sumCleaningTimesA - sumCleaningTimesB);
+
+  const sumDifference =
+    Math.max(sumCleaningTimesA, sumCleaningTimesB) -
+    Math.min(sumCleaningTimesA, sumCleaningTimesB);
+
+  if (sumDifference <= 30) return { organisedRoomsA, organisedRoomsB };
+
+  transferRooms();
+
+  // helpers
+  function transferRooms() {
+    const [longerRoomsList, shorterRoomsList] =
+      sumCleaningTimesA > sumCleaningTimesB
+        ? [organisedRoomsA, organisedRoomsB]
+        : [organisedRoomsB, organisedRoomsA];
+
+    const key = getKey();
+
+    // 1. const room = getOneRoom(longer, key);
+    // 2. removeOneRoom(longer, key);
+    // 3. addOneRoom(short, [key, room]);
+    // 4. return balanceRoomsLists(longerRoomsList, shorterRoomsList)
+
+    function getKey() {
+      const times = [120, 60, 30];
+      return times.find(
+        (time) => sumDifference > time && longerRoomsList.has(time)
+      );
+    }
+
+    console.log({ longerRoomsList, shorterRoomsList, sumDifference, key });
+  }
 }
 
 //* main function call for development
