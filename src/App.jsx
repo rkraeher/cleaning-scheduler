@@ -1,12 +1,12 @@
-import React from 'react';
-import { read, utils } from 'xlsx';
-// import { getBalancedRoomLists } from './getBalancedRoomLists';
+import React, { useState } from 'react';
+import { read, utils, writeFileXLSX } from 'xlsx';
+import {
+  getBalancedRoomLists,
+  mapRoomsToCleaningTimes,
+  sumCleaningTime,
+} from './getBalancedRoomLists';
 import { roomStates } from './constants';
-
-// const roomStates = {
-//   DEPARTURE: 'departure',
-//   STAY: 'stay',
-// };
+import { useCallback } from 'react';
 
 export function isNumberAsString(value) {
   if (typeof value === 'string' && value.trim() !== '') {
@@ -107,6 +107,11 @@ function parseAvailability(rooms = []) {
 
 // make FileUpload a separate component file
 function FileUpload() {
+  const [allRoomsList, setAllRoomsList] = useState([]);
+  const [roomsA, setRoomsA] = useState([]);
+  const [roomsB, setRoomsB] = useState([]);
+
+  // importFile
   const handleFile = async (e) => {
     const file = e.target.files[0];
     const data = await file.arrayBuffer();
@@ -125,20 +130,54 @@ function FileUpload() {
     const parsedRooms = parseAvailability(parsedData);
 
     // pass parsedRooms to the script for balancing
-    // const { roomsListA, roomsListB } = getBalancedRoomLists(parsedRooms);
+    const { roomsListA, roomsListB } = getBalancedRoomLists(parsedRooms);
+    const allRooms = mapRoomsToCleaningTimes(parsedRooms);
+
+    //? if they need to be arrays to be added to the worksheet then they should be imported as arrays already
+    const arrayAllRooms = Array.from(allRooms);
+    const arrayListA = Array.from(roomsListA);
+    const arrayListB = Array.from(roomsListB);
+
     // set the state
-    // console.log({ roomsListA, roomsListB });
+    setAllRoomsList(arrayAllRooms);
+    setRoomsA(arrayListA);
+    setRoomsB(arrayListB);
+
+    console.log({
+      allRooms,
+      arrayListA,
+      arrayListB,
+      arrayAllRooms,
+    });
   };
+
+  /* get state data and export to XLSX */
+  const exportFile = useCallback(() => {
+    const workbook = utils.book_new();
+
+    const allRoomsWorksheet = utils.json_to_sheet(allRoomsList);
+    const roomsListAWorksheet = utils.json_to_sheet(roomsA);
+    const roomsListBWorksheet = utils.json_to_sheet(roomsB);
+
+    utils.book_append_sheet(workbook, allRoomsWorksheet, 'All Rooms');
+    utils.book_append_sheet(workbook, roomsListAWorksheet, 'Rooms List A');
+    utils.book_append_sheet(workbook, roomsListBWorksheet, 'Rooms List B');
+
+    writeFileXLSX(workbook, 'room-lists.xlsx');
+  }, [allRoomsList, roomsA, roomsB]);
+
   return (
     <div>
       {/* should only upload xlsx files? or handle csvs too? */}
-      {/* can it just but written onChange={handleFile} ? */}
+      {/* can it just but written onChange={handleFile} ?
+      should be wrapped in button */}
       <input type="file" onChange={(e) => handleFile(e)} />
       {/* https://react.dev/reference/react-dom/components/input#reading-the-input-values-when-submitting-a-form */}
       {/* https://react.dev/learn/you-might-not-need-an-effect#caching-expensive-calculations */}
       {/* Give a name to every <input>, for example <input name="firstName" defaultValue="Taylor" />. 
       The name you specified will be used as a key in the form data, for example { firstName: "Taylor" }. */}
       {/* Probably want to add a submit button to make sure the uploaded file is the correct selection */}
+      <button onClick={exportFile}>Export XLSX</button>
     </div>
   );
 }
