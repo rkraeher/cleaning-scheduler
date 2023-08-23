@@ -3,13 +3,14 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "transform": {},
   "scripts": {
     "dev": "vite",
-    "serve": "npx nodemon ./src/getRoomAssignments.js",
+    "serve": "npx nodemon ./src/getBalancedRoomLists.js",
     "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "test": "NODE_OPTIONS='--experimental-vm-modules' jest"
+    "test": "jest"
   },
   "dependencies": {
     "react": "^18.2.0",
