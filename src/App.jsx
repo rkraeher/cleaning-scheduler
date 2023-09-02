@@ -1,10 +1,6 @@
 import React, { useState } from 'react';
 import { read, utils, writeFileXLSX } from 'xlsx';
-import {
-  getBalancedRoomLists,
-  mapRoomsToCleaningTimes,
-  sumCleaningTime,
-} from './getBalancedRoomLists';
+import { getBalancedRoomLists, sumCleaningTime } from './getBalancedRoomLists';
 import { roomStates } from './constants';
 import { useCallback } from 'react';
 
@@ -44,25 +40,17 @@ export function parseRow(row) {
 }
 
 export function parseRows(data) {
-  // const is ok here?
-  let parsedRows = [];
+  const parsedRows = [];
+
   for (let i = 0; i < data.length; i++) {
-    // data[i][0] is roomNumber cell
-    if (data[i][0] && isNumberAsString(data[i][0])) {
-      // const?
-      let parsedRow = parseRow(data[i]);
+    const roomNumber = data[i][0];
+
+    if (roomNumber && isNumberAsString(roomNumber)) {
+      const parsedRow = parseRow(data[i]);
       parsedRows.push([...parsedRow]);
     }
   }
   return parsedRows;
-}
-
-// maybe move this declaration inside of isDeparture?
-function isNextYear(month) {
-  const currentMonthIndex = new Date().getMonth();
-  // JS Date months are zero indexed
-  const monthIndex = month * 1 - 1;
-  return currentMonthIndex === 11 && monthIndex === 0 ? true : false;
 }
 
 function isDeparture(date) {
@@ -74,45 +62,41 @@ function isDeparture(date) {
   const year = isNextYear(month) ? currentYear + 1 : currentYear;
 
   const dateString = `${month}/${day}/${year}`;
-
   const departureDate = new Date(dateString);
   const currentDate = new Date();
 
-  // weird behaviour when working with out of date. e.g., everything before today 15.8 is 'considered stay
-  // consider removing Math.abs, and console.assert() that deparatureDate is after currentDate
-  const differenceInTime =
-    //10Math.abs(
-    departureDate.getTime() - currentDate.getTime();
-  // );
+  const differenceInTime = departureDate.getTime() - currentDate.getTime();
   const differenceInDays = Math.ceil(differenceInTime / (1000 * 60 * 60 * 24));
 
   return differenceInDays < 2;
+
+  function isNextYear(month) {
+    const currentMonthIndex = new Date().getMonth();
+    // JS Date months are zero indexed
+    const monthIndex = month * 1 - 1;
+    return currentMonthIndex === 11 && monthIndex === 0 ? true : false;
+  }
 }
 
 function parseAvailability(rooms = []) {
-  for (let room of rooms) {
-    let dateString = room[2].split(' ')[1];
+  for (const room of rooms) {
+    const dateString = room[2].split(' ')[1];
 
-    // room.includes('available') || isDeparture(dateString)
-    //   ? room.push(roomStates.DEPARTURE)
-    //   : room.push(roomStates.STAY);
-    if (room.includes('available') || isDeparture(dateString)) {
-      room.push(roomStates.DEPARTURE);
-    } else {
-      room.push(roomStates.STAY);
-    }
+    room.includes('available') || isDeparture(dateString)
+      ? room.push(roomStates.DEPARTURE)
+      : room.push(roomStates.STAY);
   }
 
   return rooms;
 }
 
 function prepareRoomDataOutput(roomsData) {
-  return roomsData.map((room) => {
+  return roomsData.map((row) => {
     return {
-      roomNumber: room[0],
-      timeCode: room[1],
-      date: room[2],
-      availability: room[3],
+      RoomNumber: row[0],
+      Code: row[1],
+      Date: row[2],
+      Availability: row[3],
     };
   });
 }
@@ -147,26 +131,17 @@ function FileUpload() {
     const allRoomsOutput = prepareRoomDataOutput(parsedRooms);
 
     const roomsOutputA = allRoomsOutput.filter((room) =>
-      roomsListA.has(room.roomNumber)
+      roomsListA.has(room.RoomNumber)
     );
 
     const roomsOutputB = allRoomsOutput.filter((room) =>
-      roomsListB.has(room.roomNumber)
+      roomsListB.has(room.RoomNumber)
     );
 
     // set the state
     setAllRooms(allRoomsOutput);
     setRoomsA(roomsOutputA);
     setRoomsB(roomsOutputB);
-
-    console.log({
-      parsedRooms,
-      allRoomsOutput,
-      roomsOutputA,
-      roomsListA,
-      roomsOutputB,
-      roomsListB,
-    });
   };
 
   /* get state data and export to XLSX */
