@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { read, utils, writeFileXLSX } from 'xlsx';
-import { getBalancedRoomLists, sumCleaningTime } from './getBalancedRoomLists';
 import { roomStates } from './constants';
-import { useCallback } from 'react';
+import { getBalancedRoomLists } from './getBalancedRoomLists';
 
 export function isNumberAsString(value) {
   if (typeof value === 'string' && value.trim() !== '') {
@@ -78,7 +77,7 @@ function isDeparture(date) {
   }
 }
 
-function parseAvailability(rooms = []) {
+function addAvailabilityStatusToRooms(rooms = []) {
   for (const room of rooms) {
     const dateString = room[2].split(' ')[1];
 
@@ -101,34 +100,34 @@ function prepareRoomDataOutput(roomsData) {
   });
 }
 
+async function readFile(file) {
+  const data = await file.arrayBuffer();
+  const workbook = read(data);
+  const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+  const jsonData = utils.sheet_to_json(worksheet, {
+    // xlsx details: instead of getting an array of objects with '_EMPTY' as the property name for each cell,
+    // by passing the options argument here we can map every row into an array to make processing easier
+    header: 1,
+    defval: '',
+  });
+
+  return jsonData;
+}
+
 // make FileUpload a separate component file
 function FileUpload() {
   const [allRooms, setAllRooms] = useState([]);
   const [roomsA, setRoomsA] = useState([]);
   const [roomsB, setRoomsB] = useState([]);
 
-  // importFile
-  const handleFile = async (e) => {
+  const importFile = async (e) => {
     const file = e.target.files[0];
-    const data = await file.arrayBuffer();
-    const workbook = read(data);
-    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-    const jsonData = utils.sheet_to_json(worksheet, {
-      // API details: instead of getting an array of objects with '_EMPTY' as the property name for each cell,
-      // by passing the options argument here we can map every row into an array to make processing easier
-      header: 1,
-      defval: '',
-    });
+    const jsonData = await readFile(file);
+    const roomsData = addAvailabilityStatusToRooms(parseRows(jsonData));
 
-    // perhaps all this processing should just be in its own functions
-    // abstractions: 1) reading, parsing, and processing the file then 2) piping it into the script
-    const parsedData = parseRows(jsonData);
-    const parsedRooms = parseAvailability(parsedData);
+    const { roomsListA, roomsListB } = getBalancedRoomLists(roomsData);
 
-    // pass parsedRooms to the script for balancing
-    const { roomsListA, roomsListB } = getBalancedRoomLists(parsedRooms);
-
-    const allRoomsOutput = prepareRoomDataOutput(parsedRooms);
+    const allRoomsOutput = prepareRoomDataOutput(roomsData);
 
     const roomsOutputA = allRoomsOutput.filter((room) =>
       roomsListA.has(room.RoomNumber)
@@ -138,18 +137,14 @@ function FileUpload() {
       roomsListB.has(room.RoomNumber)
     );
 
-    // set the state
     setAllRooms(allRoomsOutput);
     setRoomsA(roomsOutputA);
     setRoomsB(roomsOutputB);
   };
 
-  /* get state data and export to XLSX */
   const exportFile = useCallback(() => {
     const workbook = utils.book_new();
 
-    // XLSX.utils.json_to_sheet takes an array of objects and returns a worksheet with
-    // automatically-generated "headers" based on the keys of the objects.
     const allRoomsWorksheet = utils.json_to_sheet(allRooms);
     const roomsWorksheetA = utils.json_to_sheet(roomsA);
     const roomsWorksheetB = utils.json_to_sheet(roomsB);
@@ -164,9 +159,9 @@ function FileUpload() {
   return (
     <div>
       {/* should only upload xlsx files? or handle csvs too? */}
-      {/* can it just but written onChange={handleFile} ?
+      {/* can it just but written onChange={importFile} ?
       should be wrapped in button */}
-      <input type="file" onChange={(e) => handleFile(e)} />
+      <input type="file" onChange={(e) => importFile(e)} />
       {/* https://react.dev/reference/react-dom/components/input#reading-the-input-values-when-submitting-a-form */}
       {/* https://react.dev/learn/you-might-not-need-an-effect#caching-expensive-calculations */}
       {/* Give a name to every <input>, for example <input name="firstName" defaultValue="Taylor" />. 
