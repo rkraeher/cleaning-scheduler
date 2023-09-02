@@ -80,9 +80,10 @@ function isDeparture(date) {
 
   // weird behaviour when working with out of date. e.g., everything before today 15.8 is 'considered stay
   // consider removing Math.abs, and console.assert() that deparatureDate is after currentDate
-  const differenceInTime = Math.abs(
-    departureDate.getTime() - currentDate.getTime()
-  );
+  const differenceInTime =
+    //10Math.abs(
+    departureDate.getTime() - currentDate.getTime();
+  // );
   const differenceInDays = Math.ceil(differenceInTime / (1000 * 60 * 60 * 24));
 
   return differenceInDays < 2;
@@ -105,9 +106,20 @@ function parseAvailability(rooms = []) {
   return rooms;
 }
 
+function prepareRoomDataOutput(roomsData) {
+  return roomsData.map((room) => {
+    return {
+      roomNumber: room[0],
+      timeCode: room[1],
+      date: room[2],
+      availability: room[3],
+    };
+  });
+}
+
 // make FileUpload a separate component file
 function FileUpload() {
-  const [allRoomsList, setAllRoomsList] = useState([]);
+  const [allRooms, setAllRooms] = useState([]);
   const [roomsA, setRoomsA] = useState([]);
   const [roomsB, setRoomsB] = useState([]);
 
@@ -131,23 +143,29 @@ function FileUpload() {
 
     // pass parsedRooms to the script for balancing
     const { roomsListA, roomsListB } = getBalancedRoomLists(parsedRooms);
-    const allRooms = mapRoomsToCleaningTimes(parsedRooms);
 
-    //? if they need to be arrays to be added to the worksheet then they should be imported as arrays already
-    const arrayAllRooms = Array.from(allRooms);
-    const arrayListA = Array.from(roomsListA);
-    const arrayListB = Array.from(roomsListB);
+    const allRoomsOutput = prepareRoomDataOutput(parsedRooms);
+
+    const roomsOutputA = allRoomsOutput.filter((room) =>
+      roomsListA.has(room.roomNumber)
+    );
+
+    const roomsOutputB = allRoomsOutput.filter((room) =>
+      roomsListB.has(room.roomNumber)
+    );
 
     // set the state
-    setAllRoomsList(arrayAllRooms);
-    setRoomsA(arrayListA);
-    setRoomsB(arrayListB);
+    setAllRooms(allRoomsOutput);
+    setRoomsA(roomsOutputA);
+    setRoomsB(roomsOutputB);
 
     console.log({
-      allRooms,
-      arrayListA,
-      arrayListB,
-      arrayAllRooms,
+      parsedRooms,
+      allRoomsOutput,
+      roomsOutputA,
+      roomsListA,
+      roomsOutputB,
+      roomsListB,
     });
   };
 
@@ -155,16 +173,18 @@ function FileUpload() {
   const exportFile = useCallback(() => {
     const workbook = utils.book_new();
 
-    const allRoomsWorksheet = utils.json_to_sheet(allRoomsList);
-    const roomsListAWorksheet = utils.json_to_sheet(roomsA);
-    const roomsListBWorksheet = utils.json_to_sheet(roomsB);
+    // XLSX.utils.json_to_sheet takes an array of objects and returns a worksheet with
+    // automatically-generated "headers" based on the keys of the objects.
+    const allRoomsWorksheet = utils.json_to_sheet(allRooms);
+    const roomsWorksheetA = utils.json_to_sheet(roomsA);
+    const roomsWorksheetB = utils.json_to_sheet(roomsB);
 
     utils.book_append_sheet(workbook, allRoomsWorksheet, 'All Rooms');
-    utils.book_append_sheet(workbook, roomsListAWorksheet, 'Rooms List A');
-    utils.book_append_sheet(workbook, roomsListBWorksheet, 'Rooms List B');
+    utils.book_append_sheet(workbook, roomsWorksheetA, 'Rooms List A');
+    utils.book_append_sheet(workbook, roomsWorksheetB, 'Rooms List B');
 
     writeFileXLSX(workbook, 'room-lists.xlsx');
-  }, [allRoomsList, roomsA, roomsB]);
+  }, [allRooms, roomsA, roomsB]);
 
   return (
     <div>
