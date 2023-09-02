@@ -1,4 +1,4 @@
-import { isNumberAsString, parseRow, parseRows } from './App';
+import { isNumberAsString, parseRow, parseRows } from './FileImportExport';
 
 describe('isNumberAsString', () => {
   it('should return true for a valid number string', () => {
@@ -59,5 +59,5 @@ describe('parseRows', () => {
   });
 });
 
-// TODO add tests for parseAvailability
+// TODO add tests for addAvailabilityStatusToRooms
 // Consider the failing cases and bad date - we should elegantly handle when the input causes the program to crash

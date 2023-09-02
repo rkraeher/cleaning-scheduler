@@ -1,14 +1,4 @@
-const roomStates = {
-  DEPARTURE: 'departure',
-  STAY: 'stay',
-};
-
-const CLEANING_TIMES_IN_MINUTES = {
-  STAY: 15,
-  D: 30,
-  Q: 60,
-  O: 120,
-};
+import { CLEANING_TIMES_IN_MINUTES, roomStates } from './constants';
 
 //console.assert(); there will never be 0 rooms
 export function getBalancedRoomLists(rooms) {
