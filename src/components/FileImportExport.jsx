@@ -13,15 +13,16 @@ export function isNumberAsString(value) {
 export function parseRow(row) {
   let parsedRow = [];
   for (let i = 0; i < row.length; i++) {
-    const cell = row[i];
+    let cell = row[i];
+
+    if (typeof cell === 'string') cell = cell.trim();
+
     const isCellRelevant =
       (cell && isNumberAsString(cell)) ||
       isTimeCode(cell) ||
       isAvailability(cell);
 
-    if (isCellRelevant) {
-      parsedRow.push(cell);
-    }
+    if (isCellRelevant) parsedRow.push(cell);
   }
   return parsedRow;
 
@@ -32,7 +33,7 @@ export function parseRow(row) {
   }
 
   function isAvailability(cell) {
-    // matches for available or till mm.dd. in English and Czech 
+    // matches for available or till mm.dd. in English and Czech
     // permits single or double digit day.month as
     const regexEnglish = /^(available|till \d{1,2}\.\d{1,2})$/;
     const regexCzech = /^(volný|volny|do \d{1,2}\.\d{1,2})$/;
@@ -105,6 +106,7 @@ function addAvailabilityStatusToRooms(rooms = []) {
       differenceInTime / (1000 * 60 * 60 * 24)
     );
 
+    // if the date is earlier than today than it should be an error
     return differenceInDays < 2;
 
     function isNextYear(month) {
