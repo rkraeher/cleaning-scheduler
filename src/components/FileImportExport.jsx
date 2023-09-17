@@ -70,11 +70,20 @@ async function convertToJson(file) {
 
 function addAvailabilityStatusToRooms(rooms = []) {
   for (const room of rooms) {
+    const isRoomVacant =
+      room.includes('available') ||
+      room.includes('volný') ||
+      room.includes('volny');
+
     const dateString = room[2].split(' ')[1];
 
-    room.includes('available') || isDeparture(dateString)
-      ? room.push(roomStates.DEPARTURE)
-      : room.push(roomStates.STAY);
+    room.push(
+      isRoomVacant
+        ? roomStates.VACANT
+        : isDeparture(dateString)
+        ? roomStates.DEPARTURE
+        : roomStates.STAY
+    );
   }
 
   return rooms;
