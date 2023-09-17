@@ -19,12 +19,20 @@ export function parseRow(row) {
 
     const isCellRelevant =
       (cell && isNumberAsString(cell)) ||
+      isCleanlinessStatus(cell) ||
       isTimeCode(cell) ||
       isAvailability(cell);
 
     if (isCellRelevant) parsedRow.push(cell);
   }
   return parsedRow;
+
+  function isCleanlinessStatus(cell) {
+    return cell.length === 1 && (cell === 'U' || cell === 'N');
+    // if cell==='C' throw an error/warning about incorrect language
+    // (make sure to upload doc in Czech, or you may get incorrect results)
+    // but if we do this we need to handle the 'available' similarly
+  }
 
   function isTimeCode(cell) {
     // matches D, Q, or O followed by either two capital letters or a capital letter and a number
@@ -70,7 +78,13 @@ async function convertToJson(file) {
 }
 
 function addAvailabilityStatusToRooms(rooms = []) {
-  for (const room of rooms) {
+  for (const room of rooms) room.push(getRoomState(room));
+
+  return rooms;
+
+  function getRoomState(room) {
+    const isUncleanedLeftoverRoom = room.includes('N');
+
     const isRoomVacant =
       room.includes('available') ||
       room.includes('volný') ||
@@ -78,16 +92,13 @@ function addAvailabilityStatusToRooms(rooms = []) {
 
     const dateString = room[2].split(' ')[1];
 
-    room.push(
-      isRoomVacant
-        ? roomStates.VACANT
-        : isDeparture(dateString)
-        ? roomStates.DEPARTURE
-        : roomStates.STAY
-    );
-  }
+    if (isUncleanedLeftoverRoom) return roomStates.DEPARTURE;
 
-  return rooms;
+    if (isRoomVacant) return roomStates.VACANT;
+
+    if (isDeparture(dateString)) return roomStates.DEPARTURE;
+    else return roomStates.STAY;
+  }
 
   function isDeparture(date) {
     const [day, month] = date.split('.');
@@ -124,6 +135,7 @@ function prepareRoomDataOutput(roomsData) {
       RoomNumber: row[0],
       Code: row[1],
       Date: row[2],
+      // titlecleanlinessstatus
       Availability: row[3],
     };
   });
@@ -138,6 +150,8 @@ export function FileImportExport() {
     const file = e.target.files[0];
     const jsonData = await convertToJson(file);
     const roomsData = addAvailabilityStatusToRooms(parseRows(jsonData));
+    // here we should add some length validation at the very least to check that every row has every cell
+    // otherwise we should throw an error or issue a warning
 
     const { roomsListA, roomsListB } = getBalancedRoomLists(roomsData);
 
