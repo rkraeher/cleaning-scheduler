@@ -1,6 +1,5 @@
 import { CLEANING_TIMES_IN_MINUTES, roomStates } from './constants';
 
-//console.assert(); there will never be 0 rooms
 export function getBalancedRoomLists(rooms) {
   const roomsMap = mapRoomsToCleaningTimes(rooms);
 
@@ -31,23 +30,23 @@ function distributeRooms(roomsMap) {
   );
 
   for (const [room, time] of roomsMap) {
-    if (sumCleaningTime(roomsListA) + time <= halfTotalCleaningTime) {
-      roomsListA.set(room, time);
-    } else {
-      roomsListB.set(room, time);
-    }
+    sumCleaningTime(roomsListA) + time <= halfTotalCleaningTime
+      ? roomsListA.set(room, time)
+      : roomsListB.set(room, time);
   }
+
   return { roomsListA, roomsListB };
+
+  function getRoundedHalfCleaningTime(totalCleaningTime) {
+    const halfTotalCleaningTime = totalCleaningTime / 2;
+    const stayTime = CLEANING_TIMES_IN_MINUTES.STAY;
+    const roundedHalfCleaningTime =
+      Math.round(halfTotalCleaningTime / stayTime) * stayTime;
+
+    return roundedHalfCleaningTime;
+  }
 }
 
 export function sumCleaningTime(rooms) {
   return [...rooms.values()].reduce((sum, time) => sum + time, 0);
-}
-
-function getRoundedHalfCleaningTime(totalCleaningTime) {
-  const halfTotalCleaningTime = totalCleaningTime / 2;
-  const stayTime = CLEANING_TIMES_IN_MINUTES.STAY;
-  const roundedHalfCleaningTime =
-    Math.round(halfTotalCleaningTime / stayTime) * stayTime;
-  return roundedHalfCleaningTime;
 }
