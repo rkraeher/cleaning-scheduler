@@ -32,9 +32,11 @@ export function parseRow(row) {
   }
 
   function isAvailability(cell) {
-    // matches for available or till mm.dd. permits single or double digit day.month as well
-    const regex = /^(available|till \d{1,2}\.\d{1,2})$/;
-    return regex.test(cell);
+    // matches for available or till mm.dd. in English and Czech 
+    // permits single or double digit day.month as
+    const regexEnglish = /^(available|till \d{1,2}\.\d{1,2})$/;
+    const regexCzech = /^(volný|volny|do \d{1,2}\.\d{1,2})$/;
+    return regexCzech.test(cell) || regexEnglish.test(cell);
   }
 }
 
