@@ -6,18 +6,17 @@ export function getBalancedRoomLists(rooms) {
   return distributeRooms(roomsMap);
 }
 
-//TODO prepare with new, additional state: vacant
 export function mapRoomsToCleaningTimes(rooms) {
   let roomsMap = new Map();
 
-  console.log({ rooms });
-  for (const [roomNumber, cleaningTimeCode, , roomState] of rooms) {
-    const cleaningTime =
-      roomState === ROOM_STATES.STAY
-        ? CLEANING_TIMES_IN_MINUTES['STAY']
-        : CLEANING_TIMES_IN_MINUTES[cleaningTimeCode[0]];
-    // only the first letter (index 0) from the timeCodes cell is needed to set the cleaningTime for a room
-
+  for (const [roomNumber, cleaningTimeCode, _, __, roomState] of rooms) {
+// only the first letter (index 0) from the timeCodes cell is needed to set the departure cleaningTime for a room
+    const departure = cleaningTimeCode[0];
+    const cleaningTime = 
+      roomState === ROOM_STATES.DEPARTURE
+        ? CLEANING_TIMES_IN_MINUTES[departure] 
+        : CLEANING_TIMES_IN_MINUTES[roomState]; 
+    
     roomsMap.set(roomNumber, cleaningTime);
   }
   return roomsMap;
@@ -41,7 +40,7 @@ function distributeRooms(roomsMap) {
 
   function getRoundedHalfCleaningTime(totalCleaningTime) {
     const halfTotalCleaningTime = totalCleaningTime / 2;
-    const stayTime = CLEANING_TIMES_IN_MINUTES.STAY;
+    const stayTime = CLEANING_TIMES_IN_MINUTES.stay;
     const roundedHalfCleaningTime =
       Math.round(halfTotalCleaningTime / stayTime) * stayTime;
 
