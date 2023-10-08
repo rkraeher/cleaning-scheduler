@@ -10,7 +10,9 @@ export function mapRoomsToCleaningTimes(rooms) {
   let roomsMap = new Map();
 
   for (const [roomNumber, cleaningTimeCode, _, __, roomState] of rooms) {
-// only the first letter (index 0) from the timeCodes cell is needed to set the departure cleaningTime for a room
+    if (roomState === ROOM_STATES.VACANT) continue;
+    
+    // only the first letter (index 0) from the timeCodes cell is needed to set the departure cleaningTime for a room
     const departure = cleaningTimeCode[0];
     const cleaningTime = 
       roomState === ROOM_STATES.DEPARTURE
