@@ -1,9 +1,10 @@
 import React, { useState, useCallback } from 'react';
 import { read, utils, writeFileXLSX } from 'xlsx';
-import { roomStates } from '../constants';
+import { ROOM_STATES } from '../constants';
 import { getBalancedRoomLists } from '../getBalancedRoomLists';
 
-export function isNumberAsString(value) {
+// isRoomNumberAsString
+export function isRoomNumberAsString(value) {
   if (typeof value === 'string' && value.trim() !== '') {
     return !Number.isNaN(Number(value));
   }
@@ -18,7 +19,7 @@ export function parseRow(row) {
     if (typeof cell === 'string') cell = cell.trim();
 
     const isCellRelevant =
-      (cell && isNumberAsString(cell)) ||
+      (cell && isRoomNumberAsString(cell)) ||
       isCleanlinessStatus(cell) ||
       isTimeCode(cell) ||
       isAvailability(cell);
@@ -31,7 +32,7 @@ export function parseRow(row) {
     return cell.length === 1 && (cell === 'U' || cell === 'N');
     // if cell==='C' throw an error/warning about incorrect language
     // (make sure to upload doc in Czech, or you may get incorrect results)
-    // but if we do this we need to handle the 'available' similarly
+    // should also handle the 'available' similarly
   }
 
   function isTimeCode(cell) {
@@ -55,7 +56,7 @@ export function parseRows(data) {
   for (let i = 0; i < data.length; i++) {
     const roomNumber = data[i][0];
 
-    if (roomNumber && isNumberAsString(roomNumber)) {
+    if (roomNumber && isRoomNumberAsString(roomNumber)) {
       const parsedRow = parseRow(data[i]);
       parsedRows.push([...parsedRow]);
     }
@@ -68,8 +69,7 @@ async function convertToJson(file) {
   const workbook = read(data);
   const worksheet = workbook.Sheets[workbook.SheetNames[0]];
   const jsonData = utils.sheet_to_json(worksheet, {
-    // xlsx details: instead of getting an array of objects with '_EMPTY' as the property name for each cell,
-    // by passing the options argument here we can map every row into an array to make processing easier
+    // xlsx: by passing an options argument here we can map every row into an array to make processing easier
     header: 1,
     defval: '',
   });
@@ -85,19 +85,22 @@ function addAvailabilityStatusToRooms(rooms = []) {
   function getRoomState(room) {
     const isUncleanedLeftoverRoom = room.includes('N');
 
+    const dateString = room[2].split(' ')[1];
+
     const isRoomVacant =
       room.includes('available') ||
       room.includes('volný') ||
       room.includes('volny');
+  
+    if (isUncleanedLeftoverRoom || (dateString && isDeparture(dateString))) {
+      return ROOM_STATES.DEPARTURE;
+    }
 
-    const dateString = room[2].split(' ')[1];
-
-    if (isUncleanedLeftoverRoom) return roomStates.DEPARTURE;
-
-    if (isRoomVacant) return roomStates.VACANT;
-
-    if (isDeparture(dateString)) return roomStates.DEPARTURE;
-    else return roomStates.STAY;
+    if (isRoomVacant) {
+      return ROOM_STATES.VACANT;
+    } else {
+      return ROOM_STATES.STAY;
+    }
   }
 
   function isDeparture(date) {
@@ -117,7 +120,7 @@ function addAvailabilityStatusToRooms(rooms = []) {
       differenceInTime / (1000 * 60 * 60 * 24)
     );
 
-    // if the date is earlier than today than it should be an error
+    // TODO if the date is earlier than today than it should be an error
     return differenceInDays < 2;
 
     function isNextYear(month) {
@@ -135,7 +138,7 @@ function prepareRoomDataOutput(roomsData) {
       RoomNumber: row[0],
       Code: row[1],
       Date: row[2],
-      // titlecleanlinessstatus
+      // Additional Property? titlecleanlinessstatus
       Availability: row[3],
     };
   });
@@ -150,7 +153,8 @@ export function FileImportExport() {
     const file = e.target.files[0];
     const jsonData = await convertToJson(file);
     const roomsData = addAvailabilityStatusToRooms(parseRows(jsonData));
-    // here we should add some length validation at the very least to check that every row has every cell
+
+    // TODO here we should add some length validation to check that every row has every cell 
     // otherwise we should throw an error or issue a warning
 
     const { roomsListA, roomsListB } = getBalancedRoomLists(roomsData);

@@ -1,7 +1,7 @@
-export const roomStates = {
+export const ROOM_STATES = {
   DEPARTURE: 'departure',
   STAY: 'stay',
-  VACANT: 'vacant'
+  VACANT: 'vacant',
 };
 
 export const CLEANING_TIMES_IN_MINUTES = {

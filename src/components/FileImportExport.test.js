@@ -1,18 +1,18 @@
-import { isNumberAsString, parseRow, parseRows } from './FileImportExport';
+import { isRoomNumberAsString, parseRow, parseRows } from './FileImportExport';
 
-describe('isNumberAsString', () => {
+describe('isRoomNumberAsString', () => {
   it('should return true for a valid number string', () => {
-    expect(isNumberAsString('123')).toBe(true);
-    expect(isNumberAsString('-45')).toBe(true);
+    expect(isRoomNumberAsString('123')).toBe(true);
+    expect(isRoomNumberAsString('-45')).toBe(true);
   });
 
   it('should return false for a non-numeric string', () => {
-    expect(isNumberAsString('abc')).toBe(false);
-    expect(isNumberAsString('12.34a')).toBe(false);
+    expect(isRoomNumberAsString('abc')).toBe(false);
+    expect(isRoomNumberAsString('12.34a')).toBe(false);
   });
 
   it('should return false for an empty string', () => {
-    expect(isNumberAsString('')).toBe(false);
+    expect(isRoomNumberAsString('')).toBe(false);
   });
 });
 
