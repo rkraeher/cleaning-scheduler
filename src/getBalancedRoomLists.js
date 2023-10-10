@@ -9,8 +9,7 @@ export function getBalancedRoomLists(rooms) {
 export function mapRoomsToCleaningTimes(rooms) {
   let roomsMap = new Map();
 
-  for (const [roomNumber, cleaningTimeCode, _, __, roomState] of rooms) {
-    if (roomState === ROOM_STATES.VACANT) continue;
+  for (const [roomNumber, cleaningTimeCode, ,, roomState] of rooms) {
     
     // only the first letter (index 0) from the timeCodes cell is needed to set the departure cleaningTime for a room
     const departure = cleaningTimeCode[0];
