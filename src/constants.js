@@ -11,3 +11,5 @@ export const CLEANING_TIMES_IN_MINUTES = {
   Q: 60,
   O: 120,
 };
+
+export const TOTAL_CLEANING_TIME = 'Total Cleaning Time';

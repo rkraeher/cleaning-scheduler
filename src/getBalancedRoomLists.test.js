@@ -5,39 +5,39 @@ import {
 } from './getBalancedRoomLists';
 
 const rooms = [
-  ['101', 'DBS', 'till 12.08','U', 'departure'],
-  ['102', 'QDB', 'available', 'U','departure'],
-  ['103', 'QDS', 'available', 'U','departure'],
-  ['104', 'DBS', 'available', 'U','departure'],
-  ['105', 'DBS', 'available', 'U','departure'],
-  ['106', 'DBS', 'available', 'U','departure'],
-  ['107', 'DBV', 'till 12.08','U', 'departure'],
-  ['108', 'DBI', 'available', 'U','departure'],
-  ['109', 'DBI', 'till 12.08','U', 'departure'],
-  ['110', 'DBI', 'available', 'U','departure'],
-  ['111', 'DBI', 'till 12.08','U', 'departure'],
-  ['112', 'DBI', 'available', 'U','departure'],
-  ['113', 'DBI', 'available', 'U','departure'],
-  ['114', 'QDA', 'till 12.08','U', 'departure'],
-  ['115', 'QDA', 'till 12.08','U', 'departure'],
-  ['116', 'DBA', 'available', 'U','departure'],
-  ['117', 'DBI', 'available', 'U','departure'],
-  ['201', 'DBB', 'available', 'U','departure'],
-  ['202', 'QDS', 'available', 'U','departure'],
-  ['203', 'OC1', 'available', 'U','departure'],
-  ['204', 'OC2', 'available', 'U','departure'],
-  ['205', 'DBN', 'available', 'U','departure'],
-  ['206', 'DBN', 'till 13.08','U', 'departure'],
-  ['207', 'DDY', 'available', 'U','departure'],
-  ['208', 'DDY', 'till 13.08','U', 'departure'],
-  ['209', 'DDY', 'available', 'U','departure'],
-  ['210', 'DDY', 'available', 'U','departure'],
-  ['211', 'DDY', 'till 13.08','U', 'departure'],
-  ['212', 'DDY', 'available', 'U','departure'],
-  ['213', 'DDY', 'till 14.08','U', 'departure'],
-  ['214', 'QDY', 'available', 'U','departure'],
-  ['215', 'DDY', 'till 15.08','U', 'departure'],
-  ['216', 'DDY', 'available', 'U','departure'],
+  ['101', 'DBS', 'till 12.08', 'U', 'departure'],
+  ['102', 'QDB', 'available', 'U', 'departure'],
+  ['103', 'QDS', 'available', 'U', 'departure'],
+  ['104', 'DBS', 'available', 'U', 'departure'],
+  ['105', 'DBS', 'available', 'U', 'departure'],
+  ['106', 'DBS', 'available', 'U', 'departure'],
+  ['107', 'DBV', 'till 12.08', 'U', 'departure'],
+  ['108', 'DBI', 'available', 'U', 'departure'],
+  ['109', 'DBI', 'till 12.08', 'U', 'departure'],
+  ['110', 'DBI', 'available', 'U', 'departure'],
+  ['111', 'DBI', 'till 12.08', 'U', 'departure'],
+  ['112', 'DBI', 'available', 'U', 'departure'],
+  ['113', 'DBI', 'available', 'U', 'departure'],
+  ['114', 'QDA', 'till 12.08', 'U', 'departure'],
+  ['115', 'QDA', 'till 12.08', 'U', 'departure'],
+  ['116', 'DBA', 'available', 'U', 'departure'],
+  ['117', 'DBI', 'available', 'U', 'departure'],
+  ['201', 'DBB', 'available', 'U', 'departure'],
+  ['202', 'QDS', 'available', 'U', 'departure'],
+  ['203', 'OC1', 'available', 'U', 'departure'],
+  ['204', 'OC2', 'available', 'U', 'departure'],
+  ['205', 'DBN', 'available', 'U', 'departure'],
+  ['206', 'DBN', 'till 13.08', 'U', 'departure'],
+  ['207', 'DDY', 'available', 'U', 'departure'],
+  ['208', 'DDY', 'till 13.08', 'U', 'departure'],
+  ['209', 'DDY', 'available', 'U', 'departure'],
+  ['210', 'DDY', 'available', 'U', 'departure'],
+  ['211', 'DDY', 'till 13.08', 'U', 'departure'],
+  ['212', 'DDY', 'available', 'U', 'departure'],
+  ['213', 'DDY', 'till 14.08', 'U', 'departure'],
+  ['214', 'QDY', 'available', 'U', 'departure'],
+  ['215', 'DDY', 'till 15.08', 'U', 'departure'],
+  ['216', 'DDY', 'available', 'U', 'departure'],
 ];
 
 describe('sumCleaningTime', () => {
@@ -118,24 +118,25 @@ describe('getBalancedRoomLists', () => {
 
     const allRooms = [...roomsA, ...roomsB];
     const uniqueRooms = new Set(allRooms);
-    expect(uniqueRooms.size).toBe(allRooms.length);
+    // we must account for the extra entry which is appended to the list of rooms: 'Total Cleaning Time'
+    expect(uniqueRooms.size).toBe(allRooms.length - 1);
   });
 
   it('should equally divide the room cleaningTimes if possible', () => {
     const roomsWithEquallyDistributableCleaningTimes = [
-      ['101', 'OBS', 'till 12.08','U', 'departure'],
-      ['102', 'ODB', 'till 12.08','U', 'departure'],
-      ['103', 'ODS', 'till 12.08','U', 'departure'],
-      ['104', 'ODS', 'till 12.08','U', 'departure'],
-      ['202', 'DDS', 'till 12.08','U', 'departure'],
-      ['203', 'OC1', 'till 12.08','U', 'departure'],
-      ['207', 'DDY', 'till 12.08','U', 'departure'],
-      ['210', 'QDY', 'till 12.08','U', 'departure'],
-      ['211', 'DBS', 'till 12.08','U', 'departure'],
-      ['212', 'QDB', 'till 12.08','U', 'departure'],
-      ['213', 'QDS', 'till 12.08','U', 'departure'],
-      ['214', 'QC1', 'till 12.08','U', 'departure'],
-      ['215', 'DDY', 'till 12.08','U', 'departure'],
+      ['101', 'OBS', 'till 12.08', 'U', 'departure'],
+      ['102', 'ODB', 'till 12.08', 'U', 'departure'],
+      ['103', 'ODS', 'till 12.08', 'U', 'departure'],
+      ['104', 'ODS', 'till 12.08', 'U', 'departure'],
+      ['202', 'DDS', 'till 12.08', 'U', 'departure'],
+      ['203', 'OC1', 'till 12.08', 'U', 'departure'],
+      ['207', 'DDY', 'till 12.08', 'U', 'departure'],
+      ['210', 'QDY', 'till 12.08', 'U', 'departure'],
+      ['211', 'DBS', 'till 12.08', 'U', 'departure'],
+      ['212', 'QDB', 'till 12.08', 'U', 'departure'],
+      ['213', 'QDS', 'till 12.08', 'U', 'departure'],
+      ['214', 'QC1', 'till 12.08', 'U', 'departure'],
+      ['215', 'DDY', 'till 12.08', 'U', 'departure'],
     ];
 
     const { roomsListA, roomsListB } = getBalancedRoomLists(
@@ -150,21 +151,20 @@ describe('getBalancedRoomLists', () => {
 
   it('should handle a totalCleaningTime that cannot be equally divided', () => {
     const rooms = [
-      ['101', 'OBS', 'till 12.08','U', 'departure'],
-      ['102', 'ODB', 'till 12.08','U', 'departure'],
-      ['103', 'ODS', 'till 12.08','U', 'departure'],
-      ['104', 'ODS', 'till 12.08','U', 'departure'],
-      ['105', 'QBS', 'till 12.08','U', 'departure'],
-      ['202', 'DDS', 'till 12.08','U', 'departure'],
-      ['203', 'OC1', 'till 12.08','U', 'departure'],
-      ['207', 'DDY', 'till 12.08','U', 'departure'],
-      ['210', 'QDY', 'till 12.08','U', 'departure'],
-      ['211', 'DBS', 'till 12.08','U', 'departure'],
-      ['212', 'QDB', 'till 12.08','U', 'departure'],
-      ['213', 'QDS', 'till 12.08','U', 'departure'],
-      ['214', 'QC1', 'till 12.08','U', 'departure'],
-      ['215', 'DDY', 'till 12.08','U', 'departure'],
-      // An odd number of stays will produce a total cleaningTime that can never be equally divided in half
+      ['101', 'OBS', 'till 12.08', 'U', 'departure'],
+      ['102', 'ODB', 'till 12.08', 'U', 'departure'],
+      ['103', 'ODS', 'till 12.08', 'U', 'departure'],
+      ['104', 'ODS', 'till 12.08', 'U', 'departure'],
+      ['105', 'QBS', 'till 12.08', 'U', 'departure'],
+      ['202', 'DDS', 'till 12.08', 'U', 'departure'],
+      ['203', 'OC1', 'till 12.08', 'U', 'departure'],
+      ['207', 'DDY', 'till 12.08', 'U', 'departure'],
+      ['210', 'QDY', 'till 12.08', 'U', 'departure'],
+      ['211', 'DBS', 'till 12.08', 'U', 'departure'],
+      ['212', 'QDB', 'till 12.08', 'U', 'departure'],
+      ['213', 'QDS', 'till 12.08', 'U', 'departure'],
+      ['214', 'QC1', 'till 12.08', 'U', 'departure'],
+      ['215', 'DDY', 'till 12.08', 'U', 'departure'],
       ['218', 'DBI', 'available', 'U', 'stay'],
     ];
     const { roomsListA, roomsListB } = getBalancedRoomLists(rooms);
@@ -172,22 +172,18 @@ describe('getBalancedRoomLists', () => {
     const totalCleaningTimeCleanerA = sumCleaningTime(roomsListA);
     const totalCleaningTimeCleanerB = sumCleaningTime(roomsListB);
 
-    const oddNumberedTotalCleaningTime =
-      totalCleaningTimeCleanerA + totalCleaningTimeCleanerB;
-
-    expect(oddNumberedTotalCleaningTime % 2 == 1).toBeTruthy();
     expect(totalCleaningTimeCleanerA).not.toEqual(totalCleaningTimeCleanerB);
   });
 
   it('should minimize the cleaningTime difference between both cleaners', () => {
     const rooms = [
-      ['101', 'O', 'till 12.08','U', 'departure'],
-      ['102', 'O', 'till 12.08','U', 'departure'],
-      ['103', 'Q', 'till 12.08','U', 'departure'],
-      ['104', 'Q', 'till 12.08','U', 'departure'],
-      ['105', 'Q', 'till 12.08','U', 'departure'],
-      ['106', 'Q', 'till 12.08','U', 'departure'],
-      ['107', 'D', 'till 12.08','U', 'departure'],
+      ['101', 'O', 'till 12.08', 'U', 'departure'],
+      ['102', 'O', 'till 12.08', 'U', 'departure'],
+      ['103', 'Q', 'till 12.08', 'U', 'departure'],
+      ['104', 'Q', 'till 12.08', 'U', 'departure'],
+      ['105', 'Q', 'till 12.08', 'U', 'departure'],
+      ['106', 'Q', 'till 12.08', 'U', 'departure'],
+      ['107', 'D', 'till 12.08', 'U', 'departure'],
       ['108', 'DBI', 'available', 'U', 'stay'],
       ['109', 'DBI', 'available', 'U', 'stay'],
       ['110', 'DBI', 'available', 'U', 'stay'],

@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { read, utils, writeFileXLSX } from 'xlsx';
-import { ROOM_STATES } from '../constants';
+import { ROOM_STATES, TOTAL_CLEANING_TIME } from '../constants';
 import { getBalancedRoomLists } from '../getBalancedRoomLists';
 
 export function isRoomNumberAsString(value) {
@@ -90,7 +90,7 @@ function addAvailabilityStatusToRooms(rooms = []) {
       room.includes('available') ||
       room.includes('volný') ||
       room.includes('volny');
-  
+
     if (isUncleanedLeftoverRoom || (dateString && isDeparture(dateString))) {
       return ROOM_STATES.DEPARTURE;
     }
@@ -132,35 +132,47 @@ function addAvailabilityStatusToRooms(rooms = []) {
 }
 
 function prepareRoomDataOutput(roomsData) {
+  console.log({ roomsData });
   return roomsData.map((row) => {
     return {
       RoomNumber: row[0],
       Code: row[1],
-      Date: row[2],
-      // Additional Property? titlecleanlinessstatus
-      Availability: row[3],
+      Availability: row[2],
+      Leftover: row[3],
+      Status: row[4],
     };
   });
 }
 
 export function FileImportExport() {
   const [allRooms, setAllRooms] = useState([]);
+  const [allRoomsCleaningTime, setAllRoomsCleaningTime] = useState();
+
   const [roomsA, setRoomsA] = useState([]);
+  const [roomsListACleaningTime, setRoomsListACleaningTime] = useState();
+
   const [roomsB, setRoomsB] = useState([]);
+  const [roomsListBCleaningTime, setRoomsListBCleaningTime] = useState();
 
   const importFile = async (e) => {
     const file = e.target.files[0];
     const jsonData = await convertToJson(file);
     const roomsData = addAvailabilityStatusToRooms(parseRows(jsonData));
 
-    // TODO here we should add some length validation to check that every row has every cell 
-    // otherwise we should throw an error or issue a warning
+    // TODO here we should add some length validation to check that every row has every cell otherwise we should throw an error
 
     const { roomsListA, roomsListB } = getBalancedRoomLists(roomsData);
 
-    console.log({roomsListA, roomsListB});
+    const totalCleaningTimeA = roomsListA.get(TOTAL_CLEANING_TIME);
+    const totalCleaningTimeB = roomsListB.get(TOTAL_CLEANING_TIME);
+    const totalAllRoomsCleaningTime = totalCleaningTimeA + totalCleaningTimeB;
+
+    setRoomsListACleaningTime(totalCleaningTimeA);
+    setRoomsListBCleaningTime(totalCleaningTimeB);
+    setAllRoomsCleaningTime(totalAllRoomsCleaningTime);
 
     const allRoomsOutput = prepareRoomDataOutput(roomsData);
+
     const roomsOutputA = allRoomsOutput.filter((room) =>
       roomsListA.has(room.RoomNumber)
     );
@@ -171,7 +183,28 @@ export function FileImportExport() {
     setAllRooms(allRoomsOutput);
     setRoomsA(roomsOutputA);
     setRoomsB(roomsOutputB);
+
+    console.log({ allRoomsOutput, roomsListA, roomsListB });
   };
+
+  function appendCleaningTimesRow({ worksheet, cleaningTime, rowNumber }) {
+    utils.sheet_add_aoa(
+      worksheet,
+      [
+        [
+          'Total Cleaning Time:',
+          cleaningTime,
+          'Total Stays:',
+          0,
+          'Total Departures:',
+          0,
+        ],
+      ],
+      {
+        origin: rowNumber,
+      }
+    );
+  }
 
   const exportFile = useCallback(() => {
     const workbook = utils.book_new();
@@ -180,12 +213,37 @@ export function FileImportExport() {
     const roomsWorksheetA = utils.json_to_sheet(roomsA);
     const roomsWorksheetB = utils.json_to_sheet(roomsB);
 
+    appendCleaningTimesRow({
+      worksheet: allRoomsWorksheet,
+      cleaningTime: allRoomsCleaningTime,
+      rowNumber: allRooms.length + 2,
+    });
+
+    appendCleaningTimesRow({
+      worksheet: roomsWorksheetA,
+      cleaningTime: roomsListACleaningTime,
+      rowNumber: roomsA.length + 2,
+    });
+
+    appendCleaningTimesRow({
+      worksheet: roomsWorksheetB,
+      cleaningTime: roomsListBCleaningTime,
+      rowNumber: roomsB.length + 2,
+    });
+
     utils.book_append_sheet(workbook, allRoomsWorksheet, 'All Rooms');
     utils.book_append_sheet(workbook, roomsWorksheetA, 'Rooms List A');
     utils.book_append_sheet(workbook, roomsWorksheetB, 'Rooms List B');
 
     writeFileXLSX(workbook, 'room-lists.xlsx');
-  }, [allRooms, roomsA, roomsB]);
+  }, [
+    allRooms,
+    roomsA,
+    roomsB,
+    allRoomsCleaningTime,
+    roomsListACleaningTime,
+    roomsListBCleaningTime,
+  ]);
 
   return (
     <div>
