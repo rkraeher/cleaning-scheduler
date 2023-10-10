@@ -3,7 +3,6 @@ import { read, utils, writeFileXLSX } from 'xlsx';
 import { ROOM_STATES } from '../constants';
 import { getBalancedRoomLists } from '../getBalancedRoomLists';
 
-// isRoomNumberAsString
 export function isRoomNumberAsString(value) {
   if (typeof value === 'string' && value.trim() !== '') {
     return !Number.isNaN(Number(value));
@@ -13,8 +12,8 @@ export function isRoomNumberAsString(value) {
 
 export function parseRow(row) {
   let parsedRow = [];
-  for (let i = 0; i < row.length; i++) {
-    let cell = row[i];
+  for (const element of row) {
+    let cell = element;
 
     if (typeof cell === 'string') cell = cell.trim();
 
@@ -53,11 +52,11 @@ export function parseRow(row) {
 export function parseRows(data) {
   const parsedRows = [];
 
-  for (let i = 0; i < data.length; i++) {
-    const roomNumber = data[i][0];
+  for (const element of data) {
+    const roomNumber = element[0];
 
     if (roomNumber && isRoomNumberAsString(roomNumber)) {
-      const parsedRow = parseRow(data[i]);
+      const parsedRow = parseRow(element);
       parsedRows.push([...parsedRow]);
     }
   }
@@ -127,7 +126,7 @@ function addAvailabilityStatusToRooms(rooms = []) {
       const currentMonthIndex = new Date().getMonth();
       // JS Date months are zero indexed
       const monthIndex = month * 1 - 1;
-      return currentMonthIndex === 11 && monthIndex === 0 ? true : false;
+      return !!(currentMonthIndex === 11 && monthIndex === 0);
     }
   }
 }
@@ -158,6 +157,8 @@ export function FileImportExport() {
     // otherwise we should throw an error or issue a warning
 
     const { roomsListA, roomsListB } = getBalancedRoomLists(roomsData);
+
+    console.log({roomsListA, roomsListB});
 
     const allRoomsOutput = prepareRoomDataOutput(roomsData);
     const roomsOutputA = allRoomsOutput.filter((room) =>
