@@ -36,14 +36,17 @@ function distributeRooms(roomsMap) {
   const roomsListA = createRoomList();
   const roomsListB = createRoomList();
 
-  const halfTotalCleaningTime = getRoundedHalfCleaningTime(
-    sumCleaningTime(roomsMap)
-  );
+  const halfTotalCleaningTime = getRoundedHalfCleaningTime(roomsMap);
 
   for (const [roomNumber, roomData] of Object.entries(roomsMap)) {
+    // design preference: if room is vacant and thus has 0 cleaningTime, keep the first and second floors on listA and listB respectively
+    const isRoomSecondFloorVacant =
+      roomData.roomState === ROOM_STATES.VACANT &&
+      parseInt(roomNumber, 10) >= 200;
+
     const targetList =
       roomsListA.totalCleaningTime + roomData.cleaningTime <=
-      halfTotalCleaningTime
+        halfTotalCleaningTime && !isRoomSecondFloorVacant
         ? roomsListA
         : roomsListB;
 
@@ -62,9 +65,10 @@ function createRoomList() {
   };
 }
 
-function getRoundedHalfCleaningTime(totalCleaningTime) {
-  const halfTotalCleaningTime = totalCleaningTime / 2;
+function getRoundedHalfCleaningTime(roomsMap) {
+  const halfTotalCleaningTime = sumCleaningTime(roomsMap) / 2;
   const stayTime = CLEANING_TIMES_IN_MINUTES.stay;
+  // ensures the result is a multiple of 15, the smallest possible increment
   return Math.round(halfTotalCleaningTime / stayTime) * stayTime;
 }
 
