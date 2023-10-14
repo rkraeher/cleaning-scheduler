@@ -1,6 +1,6 @@
 import {
   getBalancedRoomLists,
-  mapRoomsToCleaningTimes,
+  mapSpecificCleaningTimeToEachRoomBasedOnOccupancyState,
   sumCleaningTime,
 } from './getBalancedRoomLists';
 
@@ -42,7 +42,8 @@ const rooms = [
 
 describe('sumCleaningTime', () => {
   it('should calculate the sum cleaningTime for a list of rooms', () => {
-    const { roomsMap, roomsMap2 } = mapRoomsToCleaningTimes(rooms);
+    const roomsMap =
+      mapSpecificCleaningTimeToEachRoomBasedOnOccupancyState(rooms);
     const result = sumCleaningTime(roomsMap);
     const expectedSum = 1350;
 

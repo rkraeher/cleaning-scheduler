@@ -132,7 +132,7 @@ function addAvailabilityStatusToRooms(rooms = []) {
 }
 
 function prepareRoomDataOutput(roomsData) {
-  console.log({ roomsData });
+  // console.log({ roomsData });
   return roomsData.map((row) => {
     return {
       RoomNumber: row[0],
@@ -247,7 +247,7 @@ export function FileImportExport() {
 
   return (
     <div>
-      <input type="file" accept=".xls, .xlsx, .csv" onChange={importFile} />
+      <input type='file' accept='.xls, .xlsx, .csv' onChange={importFile} />
       {allRooms.length > 0 && (
         <>
           <button onClick={exportFile}>Download</button>
