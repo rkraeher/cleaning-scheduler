@@ -42,7 +42,7 @@ const rooms = [
 
 describe('sumCleaningTime', () => {
   it('should calculate the sum cleaningTime for a list of rooms', () => {
-    const roomsMap = mapRoomsToCleaningTimes(rooms);
+    const { roomsMap, roomsMap2 } = mapRoomsToCleaningTimes(rooms);
     const result = sumCleaningTime(roomsMap);
     const expectedSum = 1350;
 
