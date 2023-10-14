@@ -53,6 +53,10 @@ function distributeRooms(roomsMap) {
     updateTargetList({ roomNumber, ...roomData }, targetList);
   }
 
+  // we don't need the cleaningTime in the output
+  deleteCleaningTimeFromRoomsList(roomsListA);
+  deleteCleaningTimeFromRoomsList(roomsListB);
+
   return { roomsListA, roomsListB };
 }
 
@@ -89,5 +93,11 @@ function updateCleaningTimes(room, roomsList) {
   if (room.roomState === ROOM_STATES.DEPARTURE) {
     roomsList.totalDeparturesCleaningTime += room.cleaningTime;
     roomsList.totalCleaningTime += room.cleaningTime;
+  }
+}
+
+function deleteCleaningTimeFromRoomsList(roomsList) {
+  for (const roomData of roomsList.rooms) {
+    delete roomData.cleaningTime;
   }
 }
