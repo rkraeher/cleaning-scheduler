@@ -9,7 +9,9 @@ export function getBalancedRoomLists(rooms) {
 export function mapSpecificCleaningTimeToEachRoomBasedOnOccupancyState(rooms) {
   const roomsMap = {};
 
-  for (const [roomNumber, cleaningTimeCode, , , roomState] of rooms) {
+  for (const room of rooms) {
+    const [roomNumber, cleaningTimeCode, availability, leftover, roomState] =
+      room;
     // only the first letter (index 0) from the timeCodes cell is needed to set the departure cleaningTime for a room
     const departure = cleaningTimeCode[0];
 
@@ -18,8 +20,15 @@ export function mapSpecificCleaningTimeToEachRoomBasedOnOccupancyState(rooms) {
         ? CLEANING_TIMES_IN_MINUTES[departure]
         : CLEANING_TIMES_IN_MINUTES[roomState];
 
-    roomsMap[roomNumber] = { cleaningTime, roomState };
+    roomsMap[roomNumber] = {
+      cleaningTime,
+      cleaningTimeCode,
+      availability,
+      leftover,
+      roomState,
+    };
   }
+
   return roomsMap;
 }
 
@@ -31,22 +40,16 @@ function distributeRooms(roomsMap) {
     sumCleaningTime(roomsMap)
   );
 
-  for (const room in roomsMap) {
-    const roomData = {
-      cleaningTime: roomsMap[room].cleaningTime,
-      roomState: roomsMap[room].roomState,
-    };
-
+  for (const [roomNumber, roomData] of Object.entries(roomsMap)) {
     const targetList =
       roomsListA.totalCleaningTime + roomData.cleaningTime <=
       halfTotalCleaningTime
         ? roomsListA
         : roomsListB;
 
-    updateTargetList({ room, roomData }, targetList);
+    updateTargetList({ roomNumber, ...roomData }, targetList);
   }
 
-  console.log({ roomsListA, roomsListB });
   return { roomsListA, roomsListB };
 }
 
@@ -69,18 +72,18 @@ export function sumCleaningTime(rooms) {
   return Object.values(rooms).reduce((sum, room) => sum + room.cleaningTime, 0);
 }
 
-function updateCleaningTimes(roomData, roomsList) {
-  if (roomData.roomState === ROOM_STATES.STAY) {
-    roomsList.totalStaysCleaningTime += roomData.cleaningTime;
-    roomsList.totalCleaningTime += roomData.cleaningTime;
-  }
-  if (roomData.roomState === ROOM_STATES.DEPARTURE) {
-    roomsList.totalDeparturesCleaningTime += roomData.cleaningTime;
-    roomsList.totalCleaningTime += roomData.cleaningTime;
-  }
+function updateTargetList(room, targetList) {
+  targetList.rooms.push(room);
+  updateCleaningTimes(room, targetList);
 }
 
-function updateTargetList({ room, roomData }, targetList) {
-  targetList.rooms.push(room);
-  updateCleaningTimes(roomData, targetList);
+function updateCleaningTimes(room, roomsList) {
+  if (room.roomState === ROOM_STATES.STAY) {
+    roomsList.totalStaysCleaningTime += room.cleaningTime;
+    roomsList.totalCleaningTime += room.cleaningTime;
+  }
+  if (room.roomState === ROOM_STATES.DEPARTURE) {
+    roomsList.totalDeparturesCleaningTime += room.cleaningTime;
+    roomsList.totalCleaningTime += room.cleaningTime;
+  }
 }

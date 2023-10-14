@@ -132,7 +132,7 @@ function addAvailabilityStatusToRooms(rooms = []) {
 }
 
 function prepareRoomDataOutput(roomsData) {
-  // console.log({ roomsData });
+  console.log({ roomsData });
   return roomsData.map((row) => {
     return {
       RoomNumber: row[0],
@@ -163,8 +163,10 @@ export function FileImportExport() {
 
     const { roomsListA, roomsListB } = getBalancedRoomLists(roomsData);
 
-    const totalCleaningTimeA = roomsListA.get(TOTAL_CLEANING_TIME);
-    const totalCleaningTimeB = roomsListB.get(TOTAL_CLEANING_TIME);
+    // console.log({ roomsListA, roomsListB });
+    // TODO: CONTINUE from here; don't forget tests
+    const totalCleaningTimeA = roomsListA.totalCleaningTime;
+    const totalCleaningTimeB = roomsListB.totalCleaningTime;
     const totalAllRoomsCleaningTime = totalCleaningTimeA + totalCleaningTimeB;
 
     setRoomsListACleaningTime(totalCleaningTimeA);
@@ -173,18 +175,19 @@ export function FileImportExport() {
 
     const allRoomsOutput = prepareRoomDataOutput(roomsData);
 
+    // with new roomsListA DS, we won't need these output filters
     const roomsOutputA = allRoomsOutput.filter((room) =>
-      roomsListA.has(room.RoomNumber)
+      roomsListA.rooms.includes(room.roomNumber)
     );
     const roomsOutputB = allRoomsOutput.filter((room) =>
-      roomsListB.has(room.RoomNumber)
+      roomsListB.rooms.includes(room.roomNumber)
     );
 
     setAllRooms(allRoomsOutput);
     setRoomsA(roomsOutputA);
     setRoomsB(roomsOutputB);
 
-    console.log({ allRoomsOutput, roomsListA, roomsListB });
+    console.log({ roomsListA, roomsListB, roomsOutputA, roomsOutputB });
   };
 
   function appendCleaningTimesRow({ worksheet, cleaningTime, rowNumber }) {
@@ -212,6 +215,8 @@ export function FileImportExport() {
     const allRoomsWorksheet = utils.json_to_sheet(allRooms);
     const roomsWorksheetA = utils.json_to_sheet(roomsA);
     const roomsWorksheetB = utils.json_to_sheet(roomsB);
+
+    // function appendCleaningTimesRows(worksheets, cleaningTimes, rooms) {}
 
     appendCleaningTimesRow({
       worksheet: allRoomsWorksheet,
