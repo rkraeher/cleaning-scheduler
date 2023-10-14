@@ -43,9 +43,7 @@ function distributeRooms(roomsMap) {
         ? roomsListA
         : roomsListB;
 
-    targetList.rooms[room] = roomData;
-    accumulateStayAndDepartureTotalCleaningTime(roomData, targetList);
-    targetList.totalCleaningTime += roomData.cleaningTime;
+    updateTargetList({ room, roomData }, targetList);
   }
 
   console.log({ roomsListA, roomsListB });
@@ -57,17 +55,8 @@ function createRoomList() {
     totalStaysCleaningTime: 0,
     totalDeparturesCleaningTime: 0,
     totalCleaningTime: 0,
-    rooms: {},
+    rooms: [],
   };
-}
-
-function accumulateStayAndDepartureTotalCleaningTime(roomData, roomsList) {
-  if (roomData.roomState === ROOM_STATES.STAY) {
-    roomsList.totalStaysCleaningTime += roomData.cleaningTime;
-  }
-  if (roomData.roomState === ROOM_STATES.DEPARTURE) {
-    roomsList.totalDeparturesCleaningTime += roomData.cleaningTime;
-  }
 }
 
 function getRoundedHalfCleaningTime(totalCleaningTime) {
@@ -78,4 +67,20 @@ function getRoundedHalfCleaningTime(totalCleaningTime) {
 
 export function sumCleaningTime(rooms) {
   return Object.values(rooms).reduce((sum, room) => sum + room.cleaningTime, 0);
+}
+
+function updateCleaningTimes(roomData, roomsList) {
+  if (roomData.roomState === ROOM_STATES.STAY) {
+    roomsList.totalStaysCleaningTime += roomData.cleaningTime;
+    roomsList.totalCleaningTime += roomData.cleaningTime;
+  }
+  if (roomData.roomState === ROOM_STATES.DEPARTURE) {
+    roomsList.totalDeparturesCleaningTime += roomData.cleaningTime;
+    roomsList.totalCleaningTime += roomData.cleaningTime;
+  }
+}
+
+function updateTargetList({ room, roomData }, targetList) {
+  targetList.rooms.push(room);
+  updateCleaningTimes(roomData, targetList);
 }
