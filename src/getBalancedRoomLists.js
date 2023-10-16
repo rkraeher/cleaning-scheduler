@@ -53,11 +53,14 @@ function distributeRooms(roomsMap) {
     updateTargetList({ roomNumber, ...roomData }, targetList);
   }
 
+  const allRoomsList = getAllRoomsList(roomsListA, roomsListB);
+
   // we don't need the cleaningTime in the output
   deleteCleaningTimeFromRoomsList(roomsListA);
   deleteCleaningTimeFromRoomsList(roomsListB);
 
-  return { roomsListA, roomsListB };
+  // TODO: prepare the cleaningTimes as hours:minutes
+  return { roomsListA, roomsListB, allRoomsList };
 }
 
 function createRoomList() {
@@ -94,6 +97,23 @@ function updateCleaningTimes(room, roomsList) {
     roomsList.totalDeparturesCleaningTime += room.cleaningTime;
     roomsList.totalCleaningTime += room.cleaningTime;
   }
+}
+
+function getAllRoomsList(roomsListA, roomsListB) {
+  const totalStaysCleaningTime =
+    roomsListA.totalStaysCleaningTime + roomsListB.totalStaysCleaningTime;
+  const totalDeparturesCleaningTime =
+    roomsListA.totalDeparturesCleaningTime +
+    roomsListB.totalDeparturesCleaningTime;
+  const totalCleaningTime =
+    totalStaysCleaningTime + totalDeparturesCleaningTime;
+
+  return {
+    totalStaysCleaningTime,
+    totalDeparturesCleaningTime,
+    totalCleaningTime,
+    rooms: [...roomsListA.rooms, ...roomsListB.rooms],
+  };
 }
 
 function deleteCleaningTimeFromRoomsList(roomsList) {

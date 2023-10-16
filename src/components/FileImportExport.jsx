@@ -131,28 +131,26 @@ function addAvailabilityStatusToRooms(rooms = []) {
   }
 }
 
-function prepareRoomDataOutput(roomsData) {
-  console.log({ roomsData });
-  return roomsData.map((row) => {
-    return {
-      RoomNumber: row[0],
-      Code: row[1],
-      Availability: row[2],
-      Leftover: row[3],
-      Status: row[4],
-    };
-  });
-}
-
 export function FileImportExport() {
-  const [allRooms, setAllRooms] = useState([]);
-  const [allRoomsCleaningTime, setAllRoomsCleaningTime] = useState();
-
   const [roomsA, setRoomsA] = useState([]);
-  const [roomsListACleaningTime, setRoomsListACleaningTime] = useState();
-
   const [roomsB, setRoomsB] = useState([]);
-  const [roomsListBCleaningTime, setRoomsListBCleaningTime] = useState();
+  const [allRooms, setAllRooms] = useState([]);
+
+  const [cleaningTimesA, setCleaningTimesA] = useState({
+    totalStaysCleaningTime: 0,
+    totalDeparturesCleaningTime: 0,
+    totalCleaningTime: 0,
+  });
+  const [cleaningTimesB, setCleaningTimesB] = useState({
+    totalStaysCleaningTime: 0,
+    totalDeparturesCleaningTime: 0,
+    totalCleaningTime: 0,
+  });
+  const [allCleaningTimes, setAllCleaningTimes] = useState({
+    totalStaysCleaningTime: 0,
+    totalDeparturesCleaningTime: 0,
+    totalCleaningTime: 0,
+  });
 
   const importFile = async (e) => {
     const file = e.target.files[0];
@@ -161,46 +159,46 @@ export function FileImportExport() {
 
     // TODO here we should add some length validation to check that every row has every cell otherwise we should throw an error
 
-    const { roomsListA, roomsListB } = getBalancedRoomLists(roomsData);
+    const { roomsListA, roomsListB, allRoomsList } =
+      getBalancedRoomLists(roomsData);
 
-    // console.log({ roomsListA, roomsListB });
-    // TODO: CONTINUE from here; don't forget tests
-    const totalCleaningTimeA = roomsListA.totalCleaningTime;
-    const totalCleaningTimeB = roomsListB.totalCleaningTime;
-    const totalAllRoomsCleaningTime = totalCleaningTimeA + totalCleaningTimeB;
+    setRoomsA(roomsListA.rooms);
+    setRoomsB(roomsListB.rooms);
+    setAllRooms(allRoomsList.rooms);
 
-    setRoomsListACleaningTime(totalCleaningTimeA);
-    setRoomsListBCleaningTime(totalCleaningTimeB);
-    setAllRoomsCleaningTime(totalAllRoomsCleaningTime);
-
-    const allRoomsOutput = prepareRoomDataOutput(roomsData);
-
-    // with new roomsListA DS, we won't need these output filters
-    const roomsOutputA = allRoomsOutput.filter((room) =>
-      roomsListA.rooms.includes(room.roomNumber)
-    );
-    const roomsOutputB = allRoomsOutput.filter((room) =>
-      roomsListB.rooms.includes(room.roomNumber)
-    );
-
-    setAllRooms(allRoomsOutput);
-    setRoomsA(roomsOutputA);
-    setRoomsB(roomsOutputB);
-
-    console.log({ roomsListA, roomsListB, roomsOutputA, roomsOutputB });
+    setCleaningTimesA({
+      totalStaysCleaningTime: roomsListA.totalStaysCleaningTime,
+      totalDeparturesCleaningTime: roomsListA.totalDeparturesCleaningTime,
+      totalCleaningTime: roomsListA.totalCleaningTime,
+    });
+    setCleaningTimesB({
+      totalStaysCleaningTime: roomsListB.totalStaysCleaningTime,
+      totalDeparturesCleaningTime: roomsListB.totalDeparturesCleaningTime,
+      totalCleaningTime: roomsListB.totalCleaningTime,
+    });
+    setAllCleaningTimes({
+      totalStaysCleaningTime: allRoomsList.totalStaysCleaningTime,
+      totalDeparturesCleaningTime: allRoomsList.totalDeparturesCleaningTime,
+      totalCleaningTime: allRoomsList.totalCleaningTime,
+    });
   };
 
   function appendCleaningTimesRow({ worksheet, cleaningTime, rowNumber }) {
+    const {
+      totalCleaningTime,
+      totalStaysCleaningTime,
+      totalDeparturesCleaningTime,
+    } = cleaningTime;
     utils.sheet_add_aoa(
       worksheet,
       [
         [
           'Total Cleaning Time:',
-          cleaningTime,
+          totalCleaningTime,
           'Total Stays:',
-          0,
+          totalStaysCleaningTime,
           'Total Departures:',
-          0,
+          totalDeparturesCleaningTime,
         ],
       ],
       {
@@ -216,23 +214,21 @@ export function FileImportExport() {
     const roomsWorksheetA = utils.json_to_sheet(roomsA);
     const roomsWorksheetB = utils.json_to_sheet(roomsB);
 
-    // function appendCleaningTimesRows(worksheets, cleaningTimes, rooms) {}
-
     appendCleaningTimesRow({
       worksheet: allRoomsWorksheet,
-      cleaningTime: allRoomsCleaningTime,
+      cleaningTime: allCleaningTimes,
       rowNumber: allRooms.length + 2,
     });
 
     appendCleaningTimesRow({
       worksheet: roomsWorksheetA,
-      cleaningTime: roomsListACleaningTime,
+      cleaningTime: cleaningTimesA,
       rowNumber: roomsA.length + 2,
     });
 
     appendCleaningTimesRow({
       worksheet: roomsWorksheetB,
-      cleaningTime: roomsListBCleaningTime,
+      cleaningTime: cleaningTimesB,
       rowNumber: roomsB.length + 2,
     });
 
@@ -242,12 +238,12 @@ export function FileImportExport() {
 
     writeFileXLSX(workbook, 'room-lists.xlsx');
   }, [
-    allRooms,
     roomsA,
+    cleaningTimesA,
     roomsB,
-    allRoomsCleaningTime,
-    roomsListACleaningTime,
-    roomsListBCleaningTime,
+    cleaningTimesB,
+    allRooms,
+    allCleaningTimes,
   ]);
 
   return (
