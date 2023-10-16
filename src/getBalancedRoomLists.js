@@ -55,11 +55,8 @@ function distributeRooms(roomsMap) {
 
   const allRoomsList = getAllRoomsList(roomsListA, roomsListB);
 
-  // we don't need the cleaningTime in the output
-  deleteCleaningTimeFromRoomsList(roomsListA);
-  deleteCleaningTimeFromRoomsList(roomsListB);
+  prepareOutput(roomsListA, roomsListB, allRoomsList);
 
-  // TODO: prepare the cleaningTimes as hours:minutes
   return { roomsListA, roomsListB, allRoomsList };
 }
 
@@ -99,6 +96,14 @@ function updateCleaningTimes(room, roomsList) {
   }
 }
 
+function prepareOutput(roomsListA, roomsListB, allRoomsList) {
+  // we don't need the individual room cleaningTimes in the output
+  deleteCleaningTimeFromRoomsList(roomsListA);
+  deleteCleaningTimeFromRoomsList(roomsListB);
+
+  formatCleaningTimeTotals({ roomsListA, roomsListB, allRoomsList });
+}
+
 function getAllRoomsList(roomsListA, roomsListB) {
   const totalStaysCleaningTime =
     roomsListA.totalStaysCleaningTime + roomsListB.totalStaysCleaningTime;
@@ -106,8 +111,7 @@ function getAllRoomsList(roomsListA, roomsListB) {
     roomsListA.totalDeparturesCleaningTime +
     roomsListB.totalDeparturesCleaningTime;
   const totalCleaningTime =
-    totalStaysCleaningTime + totalDeparturesCleaningTime;
-
+    roomsListA.totalCleaningTime + roomsListB.totalCleaningTime;
   return {
     totalStaysCleaningTime,
     totalDeparturesCleaningTime,
@@ -120,4 +124,33 @@ function deleteCleaningTimeFromRoomsList(roomsList) {
   for (const roomData of roomsList.rooms) {
     delete roomData.cleaningTime;
   }
+}
+
+function formatCleaningTimeTotals(roomsLists = {}) {
+  for (const list of Object.values(roomsLists)) {
+    const {
+      totalCleaningTime,
+      totalDeparturesCleaningTime,
+      totalStaysCleaningTime,
+    } = list;
+
+    list.totalCleaningTime = convertMinutesToHoursAndMinutes(totalCleaningTime);
+    list.totalDeparturesCleaningTime = convertMinutesToHoursAndMinutes(
+      totalDeparturesCleaningTime
+    );
+    list.totalStaysCleaningTime = convertMinutesToHoursAndMinutes(
+      totalStaysCleaningTime
+    );
+  }
+}
+
+function convertMinutesToHoursAndMinutes(totalMinutes) {
+  if (isNaN(totalMinutes)) {
+    return 'Invalid minutes input. Cannot convert to %h %m format';
+  }
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  const formattedTime = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+  return formattedTime;
 }
