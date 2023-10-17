@@ -96,14 +96,6 @@ function updateCleaningTimes(room, roomsList) {
   }
 }
 
-function prepareOutput(roomsListA, roomsListB, allRoomsList) {
-  // we don't need the individual room cleaningTimes in the output
-  deleteCleaningTimeFromRoomsList(roomsListA);
-  deleteCleaningTimeFromRoomsList(roomsListB);
-
-  formatCleaningTimeTotals({ roomsListA, roomsListB, allRoomsList });
-}
-
 function getAllRoomsList(roomsListA, roomsListB) {
   const totalStaysCleaningTime =
     roomsListA.totalStaysCleaningTime + roomsListB.totalStaysCleaningTime;
@@ -118,6 +110,14 @@ function getAllRoomsList(roomsListA, roomsListB) {
     totalCleaningTime,
     rooms: [...roomsListA.rooms, ...roomsListB.rooms],
   };
+}
+
+function prepareOutput(roomsListA, roomsListB, allRoomsList) {
+  // we don't need the individual room cleaningTimes in the output
+  deleteCleaningTimeFromRoomsList(roomsListA);
+  deleteCleaningTimeFromRoomsList(roomsListB);
+
+  formatCleaningTimeTotals({ roomsListA, roomsListB, allRoomsList });
 }
 
 function deleteCleaningTimeFromRoomsList(roomsList) {
@@ -155,6 +155,7 @@ function convertMinutesToHoursAndMinutes(totalMinutes) {
   return formattedTime;
 }
 
+// util for tests
 export function convertHoursAndMinutesToMinutes(formattedTime) {
   const timeRegex = /^(\d+)h (\d+)m$|^(\d+)m$/; // Matches formats like "1h 30m" or "45m"
   const match = formattedTime.match(timeRegex);
