@@ -132,26 +132,11 @@ function addAvailabilityStatusToRooms(rooms = []) {
 }
 
 export function FileImportExport() {
-  const [roomsA, setRoomsA] = useState([]);
-  const [roomsB, setRoomsB] = useState([]);
-  const [allRooms, setAllRooms] = useState([]);
+  const [roomsA, setRoomsA] = useState({});
+  const [roomsB, setRoomsB] = useState({});
+  const [allRooms, setAllRooms] = useState({});
 
-  const importFile = async (e) => {
-    const file = e.target.files[0];
-    const jsonData = await convertToJson(file);
-    const roomsData = addAvailabilityStatusToRooms(parseRows(jsonData));
-
-    // TODO here we should add some length validation to check that every row has every cell otherwise we should throw an error
-
-    const { roomsListA, roomsListB, allRoomsList } =
-      getBalancedRoomLists(roomsData);
-
-    setRoomsA(roomsListA);
-    setRoomsB(roomsListB);
-    setAllRooms(allRoomsList);
-  };
-
-  function appendCleaningTimesRow({ worksheet, roomsList }) {
+  function appendCleaningTimesRow(worksheet, roomsList) {
     const {
       totalCleaningTime,
       totalStaysCleaningTime,
@@ -177,6 +162,21 @@ export function FileImportExport() {
     );
   }
 
+  const importFile = async (e) => {
+    const file = e.target.files[0];
+    const jsonData = await convertToJson(file);
+    const roomsData = addAvailabilityStatusToRooms(parseRows(jsonData));
+
+    // TODO here we should add some length validation to check that every row has every cell otherwise we should throw an error
+
+    const { roomsListA, roomsListB, allRoomsList } =
+      getBalancedRoomLists(roomsData);
+
+    setRoomsA(roomsListA);
+    setRoomsB(roomsListB);
+    setAllRooms(allRoomsList);
+  };
+
   const exportFile = useCallback(() => {
     const workbook = utils.book_new();
 
@@ -184,20 +184,9 @@ export function FileImportExport() {
     const roomsWorksheetA = utils.json_to_sheet(roomsA.rooms);
     const roomsWorksheetB = utils.json_to_sheet(roomsB.rooms);
 
-    appendCleaningTimesRow({
-      allRoomsWorksheet,
-      allRooms,
-    });
-
-    appendCleaningTimesRow({
-      roomsWorksheetA,
-      roomsA,
-    });
-
-    appendCleaningTimesRow({
-      roomsWorksheetB,
-      roomsB,
-    });
+    appendCleaningTimesRow(allRoomsWorksheet, allRooms);
+    appendCleaningTimesRow(roomsWorksheetA, roomsA);
+    appendCleaningTimesRow(roomsWorksheetB, roomsB);
 
     utils.book_append_sheet(workbook, allRoomsWorksheet, 'All Rooms');
     utils.book_append_sheet(workbook, roomsWorksheetA, 'Rooms List A');
