@@ -1,6 +1,11 @@
+import { isTimeCode } from './components/importUtils';
 import { CLEANING_TIMES_IN_MINUTES, ROOM_STATES } from './constants';
 
 export function getBalancedRoomLists(rooms) {
+  if (!rooms || rooms.length === 0) {
+    throw new Error('Input data is empty or undefined.');
+  }
+
   const roomsMap = mapCleaningTimeToRooms(rooms);
   return distributeRooms(roomsMap);
 }
@@ -11,6 +16,10 @@ function mapCleaningTimeToRooms(rooms) {
   for (const room of rooms) {
     const [roomNumber, cleaningTimeCode, availability, leftover, roomState] =
       room;
+
+    if (!isValidCleaningTimeCode(cleaningTimeCode)) {
+      throw new Error('Invalid cleaningTimeCode found in the input data.');
+    }
     // only the first letter (index 0) from the timeCodes cell is needed to set the departure cleaningTime for a room
     const departure = cleaningTimeCode[0];
 
@@ -30,6 +39,9 @@ function mapCleaningTimeToRooms(rooms) {
 
   return roomsMap;
 }
+
+const isValidCleaningTimeCode = (cleaningTimeCode) =>
+  isTimeCode(cleaningTimeCode);
 
 function distributeRooms(roomsMap) {
   const roomsListA = createRoomList();

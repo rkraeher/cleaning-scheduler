@@ -32,12 +32,6 @@ export function parseRow(row) {
     // should also handle the 'available' similarly
   }
 
-  function isTimeCode(cell) {
-    // matches D, Q, or O followed by either two capital letters or a capital letter and a number
-    const regex = /^(D|Q|O)([A-Z]{2}|[A-Z]\d)$/;
-    return regex.test(cell);
-  }
-
   function isAvailability(cell) {
     // matches for available or till mm.dd. in English and Czech
     // permits single or double digit day.month as
@@ -45,6 +39,12 @@ export function parseRow(row) {
     const regexCzech = /^(volný|volny|do \d{1,2}\.\d{1,2})$/;
     return regexCzech.test(cell) || regexEnglish.test(cell);
   }
+}
+
+export function isTimeCode(cell) {
+  // matches D, Q, or O followed by either two capital letters or a capital letter and a number
+  const regex = /^(D|Q|O)([A-Z]{2}|[A-Z]\d)$/;
+  return regex.test(cell);
 }
 
 export function parseRows(data) {
