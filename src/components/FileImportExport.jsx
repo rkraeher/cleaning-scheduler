@@ -5,6 +5,7 @@ import {
   addAvailabilityStatusToRooms,
   convertToJson,
   parseRows,
+  validateRoomsData,
 } from './importUtils';
 
 export function FileImportExport() {
@@ -43,7 +44,11 @@ export function FileImportExport() {
     const jsonData = await convertToJson(file);
     const roomsData = addAvailabilityStatusToRooms(parseRows(jsonData));
 
-    // TODO here we should add some length validation to check that every row has every cell otherwise we should throw an error
+    if (!validateRoomsData(roomsData)) {
+      alert(
+        'Careful! Your input data is missing some expected data. Script results may be inaccurate.'
+      );
+    }
 
     const { roomsListA, roomsListB, allRoomsList } =
       getBalancedRoomLists(roomsData);

@@ -128,3 +128,7 @@ export function addAvailabilityStatusToRooms(rooms = []) {
     }
   }
 }
+
+export function validateRoomsData(roomsData) {
+  return roomsData.every((cell) => cell.length === 5);
+}
