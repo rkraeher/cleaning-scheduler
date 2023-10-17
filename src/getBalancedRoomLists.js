@@ -39,7 +39,7 @@ function distributeRooms(roomsMap) {
   const halfTotalCleaningTime = getRoundedHalfCleaningTime(roomsMap);
 
   for (const [roomNumber, roomData] of Object.entries(roomsMap)) {
-    // design preference: if room is vacant and thus has 0 cleaningTime, keep the first and second floors on listA and listB respectively
+    // keep the first and second floors on listA and listB respectively for vacant rooms
     const isRoomSecondFloorVacant =
       roomData.roomState === ROOM_STATES.VACANT &&
       parseInt(roomNumber, 10) >= 200;

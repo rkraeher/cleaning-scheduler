@@ -1,6 +1,6 @@
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { read, utils, writeFileXLSX } from 'xlsx';
-import { ROOM_STATES, TOTAL_CLEANING_TIME } from '../constants';
+import { ROOM_STATES } from '../constants';
 import { getBalancedRoomLists } from '../getBalancedRoomLists';
 
 export function isRoomNumberAsString(value) {
@@ -136,22 +136,6 @@ export function FileImportExport() {
   const [roomsB, setRoomsB] = useState([]);
   const [allRooms, setAllRooms] = useState([]);
 
-  const [cleaningTimesA, setCleaningTimesA] = useState({
-    totalStaysCleaningTime: 0,
-    totalDeparturesCleaningTime: 0,
-    totalCleaningTime: 0,
-  });
-  const [cleaningTimesB, setCleaningTimesB] = useState({
-    totalStaysCleaningTime: 0,
-    totalDeparturesCleaningTime: 0,
-    totalCleaningTime: 0,
-  });
-  const [allCleaningTimes, setAllCleaningTimes] = useState({
-    totalStaysCleaningTime: 0,
-    totalDeparturesCleaningTime: 0,
-    totalCleaningTime: 0,
-  });
-
   const importFile = async (e) => {
     const file = e.target.files[0];
     const jsonData = await convertToJson(file);
@@ -162,33 +146,19 @@ export function FileImportExport() {
     const { roomsListA, roomsListB, allRoomsList } =
       getBalancedRoomLists(roomsData);
 
-    setRoomsA(roomsListA.rooms);
-    setRoomsB(roomsListB.rooms);
-    setAllRooms(allRoomsList.rooms);
-
-    setCleaningTimesA({
-      totalStaysCleaningTime: roomsListA.totalStaysCleaningTime,
-      totalDeparturesCleaningTime: roomsListA.totalDeparturesCleaningTime,
-      totalCleaningTime: roomsListA.totalCleaningTime,
-    });
-    setCleaningTimesB({
-      totalStaysCleaningTime: roomsListB.totalStaysCleaningTime,
-      totalDeparturesCleaningTime: roomsListB.totalDeparturesCleaningTime,
-      totalCleaningTime: roomsListB.totalCleaningTime,
-    });
-    setAllCleaningTimes({
-      totalStaysCleaningTime: allRoomsList.totalStaysCleaningTime,
-      totalDeparturesCleaningTime: allRoomsList.totalDeparturesCleaningTime,
-      totalCleaningTime: allRoomsList.totalCleaningTime,
-    });
+    setRoomsA(roomsListA);
+    setRoomsB(roomsListB);
+    setAllRooms(allRoomsList);
   };
 
-  function appendCleaningTimesRow({ worksheet, cleaningTime, rowNumber }) {
+  function appendCleaningTimesRow({ worksheet, roomsList }) {
     const {
       totalCleaningTime,
       totalStaysCleaningTime,
       totalDeparturesCleaningTime,
-    } = cleaningTime;
+      rooms,
+    } = roomsList;
+
     utils.sheet_add_aoa(
       worksheet,
       [
@@ -202,7 +172,7 @@ export function FileImportExport() {
         ],
       ],
       {
-        origin: rowNumber,
+        origin: rooms.length + 2,
       }
     );
   }
@@ -210,26 +180,23 @@ export function FileImportExport() {
   const exportFile = useCallback(() => {
     const workbook = utils.book_new();
 
-    const allRoomsWorksheet = utils.json_to_sheet(allRooms);
-    const roomsWorksheetA = utils.json_to_sheet(roomsA);
-    const roomsWorksheetB = utils.json_to_sheet(roomsB);
+    const allRoomsWorksheet = utils.json_to_sheet(allRooms.rooms);
+    const roomsWorksheetA = utils.json_to_sheet(roomsA.rooms);
+    const roomsWorksheetB = utils.json_to_sheet(roomsB.rooms);
 
     appendCleaningTimesRow({
-      worksheet: allRoomsWorksheet,
-      cleaningTime: allCleaningTimes,
-      rowNumber: allRooms.length + 2,
+      allRoomsWorksheet,
+      allRooms,
     });
 
     appendCleaningTimesRow({
-      worksheet: roomsWorksheetA,
-      cleaningTime: cleaningTimesA,
-      rowNumber: roomsA.length + 2,
+      roomsWorksheetA,
+      roomsA,
     });
 
     appendCleaningTimesRow({
-      worksheet: roomsWorksheetB,
-      cleaningTime: cleaningTimesB,
-      rowNumber: roomsB.length + 2,
+      roomsWorksheetB,
+      roomsB,
     });
 
     utils.book_append_sheet(workbook, allRoomsWorksheet, 'All Rooms');
@@ -237,19 +204,12 @@ export function FileImportExport() {
     utils.book_append_sheet(workbook, roomsWorksheetB, 'Rooms List B');
 
     writeFileXLSX(workbook, 'room-lists.xlsx');
-  }, [
-    roomsA,
-    cleaningTimesA,
-    roomsB,
-    cleaningTimesB,
-    allRooms,
-    allCleaningTimes,
-  ]);
+  }, [roomsA, roomsB, allRooms]);
 
   return (
     <div>
       <input type='file' accept='.xls, .xlsx, .csv' onChange={importFile} />
-      {allRooms.length > 0 && (
+      {allRooms?.rooms?.length > 0 && (
         <>
           <button onClick={exportFile}>Download</button>
           <p>
