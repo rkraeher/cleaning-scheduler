@@ -154,3 +154,21 @@ function convertMinutesToHoursAndMinutes(totalMinutes) {
   const formattedTime = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
   return formattedTime;
 }
+
+export function convertHoursAndMinutesToMinutes(formattedTime) {
+  const timeRegex = /^(\d+)h (\d+)m$|^(\d+)m$/; // Matches formats like "1h 30m" or "45m"
+  const match = formattedTime.match(timeRegex);
+
+  if (!match) {
+    throw new Error('Invalid formatted time input');
+  }
+
+  if (match[1]) {
+    const hours = parseInt(match[1], 10);
+    const minutes = parseInt(match[2], 10);
+    return hours * 60 + minutes;
+  } else if (match[3]) {
+    const minutes = parseInt(match[3], 10);
+    return minutes;
+  }
+}
