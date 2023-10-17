@@ -117,8 +117,11 @@ export function addAvailabilityStatusToRooms(rooms = []) {
       differenceInTime / (1000 * 60 * 60 * 24)
     );
 
-    // TODO if the date is earlier than today than it should be an error
-    return differenceInDays < 2;
+    return differenceInDays < 0
+      ? alert(
+          'Double check your input. Departure dates are earlier than current date!'
+        )
+      : differenceInDays < 2;
 
     function isNextYear(month) {
       const currentMonthIndex = new Date().getMonth();
