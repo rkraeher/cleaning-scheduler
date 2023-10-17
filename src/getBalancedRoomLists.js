@@ -1,12 +1,11 @@
 import { CLEANING_TIMES_IN_MINUTES, ROOM_STATES } from './constants';
 
 export function getBalancedRoomLists(rooms) {
-  const roomsMap =
-    mapSpecificCleaningTimeToEachRoomBasedOnOccupancyState(rooms);
+  const roomsMap = mapCleaningTimeToRooms(rooms);
   return distributeRooms(roomsMap);
 }
 
-export function mapSpecificCleaningTimeToEachRoomBasedOnOccupancyState(rooms) {
+function mapCleaningTimeToRooms(rooms) {
   const roomsMap = {};
 
   for (const room of rooms) {
