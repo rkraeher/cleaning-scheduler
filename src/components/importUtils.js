@@ -118,10 +118,8 @@ export function addAvailabilityStatusToRooms(rooms = []) {
     );
 
     return differenceInDays < 0
-      ? alert(
-          'Double check your input. Departure dates are earlier than current date!'
-        )
-      : differenceInDays < 2;
+      ? alertOnceForSuspiciousDate()
+      : 0 <= differenceInDays < 2;
 
     function isNextYear(month) {
       const currentMonthIndex = new Date().getMonth();
@@ -130,6 +128,14 @@ export function addAvailabilityStatusToRooms(rooms = []) {
       return !!(currentMonthIndex === 11 && monthIndex === 0);
     }
   }
+}
+
+function alertOnceForSuspiciousDate() {
+  alert(
+    'Double check your input. Departure dates are earlier than current date. They will be recorded as "stays."'
+  );
+  // eslint-disable-next-line no-func-assign
+  alertOnceForSuspiciousDate = () => false;
 }
 
 export function validateRoomsData(roomsData) {
