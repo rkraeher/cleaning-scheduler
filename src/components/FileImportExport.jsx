@@ -1,164 +1,85 @@
-import React, { useState, useCallback } from 'react';
-import { read, utils, writeFileXLSX } from 'xlsx';
-import { roomStates } from '../constants';
+import { useState, useCallback } from 'react';
+import { utils, writeFileXLSX } from 'xlsx';
 import { getBalancedRoomLists } from '../getBalancedRoomLists';
-
-export function isNumberAsString(value) {
-  if (typeof value === 'string' && value.trim() !== '') {
-    return !Number.isNaN(Number(value));
-  }
-  return false;
-}
-
-export function parseRow(row) {
-  function isTimeCode(cell) {
-    // matches D, Q, or O followed by either two capital letters or a capital letter and a number
-    const regex = /^(D|Q|O)([A-Z]{2}|[A-Z]\d)$/;
-    return regex.test(cell);
-  }
-
-  function isAvailability(cell) {
-    // matches for available or till mm.dd. permits single or double digit day.month as well
-    const regex = /^(available|till \d{1,2}\.\d{1,2})$/;
-    return regex.test(cell);
-  }
-
-  let parsedRow = [];
-  for (let i = 0; i < row.length; i++) {
-    const cell = row[i];
-    const isCellRelevant =
-      (cell && isNumberAsString(cell)) ||
-      isTimeCode(cell) ||
-      isAvailability(cell);
-
-    if (isCellRelevant) {
-      parsedRow.push(cell);
-    }
-  }
-  return parsedRow;
-}
-
-export function parseRows(data) {
-  const parsedRows = [];
-
-  for (let i = 0; i < data.length; i++) {
-    const roomNumber = data[i][0];
-
-    if (roomNumber && isNumberAsString(roomNumber)) {
-      const parsedRow = parseRow(data[i]);
-      parsedRows.push([...parsedRow]);
-    }
-  }
-  return parsedRows;
-}
-
-function isDeparture(date) {
-  const [day, month] = date.split('.');
-
-  const currentYear = new Date().getFullYear();
-
-  // we check for the year-end edgecase
-  const year = isNextYear(month) ? currentYear + 1 : currentYear;
-
-  const dateString = `${month}/${day}/${year}`;
-  const departureDate = new Date(dateString);
-  const currentDate = new Date();
-
-  const differenceInTime = departureDate.getTime() - currentDate.getTime();
-  const differenceInDays = Math.ceil(differenceInTime / (1000 * 60 * 60 * 24));
-
-  return differenceInDays < 2;
-
-  function isNextYear(month) {
-    const currentMonthIndex = new Date().getMonth();
-    // JS Date months are zero indexed
-    const monthIndex = month * 1 - 1;
-    return currentMonthIndex === 11 && monthIndex === 0 ? true : false;
-  }
-}
-
-function addAvailabilityStatusToRooms(rooms = []) {
-  for (const room of rooms) {
-    const dateString = room[2].split(' ')[1];
-
-    room.includes('available') || isDeparture(dateString)
-      ? room.push(roomStates.DEPARTURE)
-      : room.push(roomStates.STAY);
-  }
-
-  return rooms;
-}
-
-function prepareRoomDataOutput(roomsData) {
-  return roomsData.map((row) => {
-    return {
-      RoomNumber: row[0],
-      Code: row[1],
-      Date: row[2],
-      Availability: row[3],
-    };
-  });
-}
-
-async function readFile(file) {
-  const data = await file.arrayBuffer();
-  const workbook = read(data);
-  const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-  const jsonData = utils.sheet_to_json(worksheet, {
-    // xlsx details: instead of getting an array of objects with '_EMPTY' as the property name for each cell,
-    // by passing the options argument here we can map every row into an array to make processing easier
-    header: 1,
-    defval: '',
-  });
-
-  return jsonData;
-}
+import {
+  addAvailabilityStatusToRooms,
+  convertToJson,
+  parseRows,
+  validateRoomsData,
+} from './importUtils';
 
 export function FileImportExport() {
-  const [allRooms, setAllRooms] = useState([]);
-  const [roomsA, setRoomsA] = useState([]);
-  const [roomsB, setRoomsB] = useState([]);
+  const [roomsA, setRoomsA] = useState({});
+  const [roomsB, setRoomsB] = useState({});
+  const [allRooms, setAllRooms] = useState({});
+
+  function appendCleaningTimesRow(worksheet, roomsList) {
+    const {
+      totalCleaningTime,
+      totalStaysCleaningTime,
+      totalDeparturesCleaningTime,
+      rooms,
+    } = roomsList;
+
+    utils.sheet_add_aoa(
+      worksheet,
+      [
+        [
+          'Celkem:',
+          totalCleaningTime,
+          'Pobyty:',
+          totalStaysCleaningTime,
+          'Odjezdy:',
+          totalDeparturesCleaningTime,
+        ],
+      ],
+      {
+        origin: rooms.length + 2,
+      }
+    );
+  }
 
   const importFile = async (e) => {
     const file = e.target.files[0];
-    const jsonData = await readFile(file);
+    const jsonData = await convertToJson(file);
     const roomsData = addAvailabilityStatusToRooms(parseRows(jsonData));
 
-    const { roomsListA, roomsListB } = getBalancedRoomLists(roomsData);
+    if (!validateRoomsData(roomsData)) {
+      alert(
+        'Careful! Your input data is missing some expected data. Script results may be inaccurate.'
+      );
+    }
 
-    const allRoomsOutput = prepareRoomDataOutput(roomsData);
+    const { roomsListA, roomsListB, allRoomsList } =
+      getBalancedRoomLists(roomsData);
 
-    const roomsOutputA = allRoomsOutput.filter((room) =>
-      roomsListA.has(room.RoomNumber)
-    );
-
-    const roomsOutputB = allRoomsOutput.filter((room) =>
-      roomsListB.has(room.RoomNumber)
-    );
-
-    setAllRooms(allRoomsOutput);
-    setRoomsA(roomsOutputA);
-    setRoomsB(roomsOutputB);
+    setRoomsA(roomsListA);
+    setRoomsB(roomsListB);
+    setAllRooms(allRoomsList);
   };
 
   const exportFile = useCallback(() => {
     const workbook = utils.book_new();
 
-    const allRoomsWorksheet = utils.json_to_sheet(allRooms);
-    const roomsWorksheetA = utils.json_to_sheet(roomsA);
-    const roomsWorksheetB = utils.json_to_sheet(roomsB);
+    const allRoomsWorksheet = utils.json_to_sheet(allRooms.rooms);
+    const roomsWorksheetA = utils.json_to_sheet(roomsA.rooms);
+    const roomsWorksheetB = utils.json_to_sheet(roomsB.rooms);
+
+    appendCleaningTimesRow(allRoomsWorksheet, allRooms);
+    appendCleaningTimesRow(roomsWorksheetA, roomsA);
+    appendCleaningTimesRow(roomsWorksheetB, roomsB);
 
     utils.book_append_sheet(workbook, allRoomsWorksheet, 'All Rooms');
     utils.book_append_sheet(workbook, roomsWorksheetA, 'Rooms List A');
     utils.book_append_sheet(workbook, roomsWorksheetB, 'Rooms List B');
 
     writeFileXLSX(workbook, 'room-lists.xlsx');
-  }, [allRooms, roomsA, roomsB]);
+  }, [roomsA, roomsB, allRooms]);
 
   return (
     <div>
-      <input type="file" accept=".xls, .xlsx, .csv" onChange={importFile} />
-      {allRooms.length > 0 && (
+      <input type='file' accept='.xls, .xlsx, .csv' onChange={importFile} />
+      {allRooms?.rooms?.length > 0 && (
         <>
           <button onClick={exportFile}>Download</button>
           <p>
