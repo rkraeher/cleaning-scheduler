@@ -82,7 +82,7 @@ function createRoomList() {
 
 function getRoundedHalfCleaningTime(roomsMap) {
   const halfTotalCleaningTime = sumCleaningTime(roomsMap) / 2;
-  const stayTime = CLEANING_TIMES_IN_MINUTES.stay;
+  const stayTime = CLEANING_TIMES_IN_MINUTES.pobyt;
   // ensures the result is a multiple of 15, the smallest possible increment
   return Math.round(halfTotalCleaningTime / stayTime) * stayTime;
 }

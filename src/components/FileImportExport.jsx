@@ -25,11 +25,11 @@ export function FileImportExport() {
       worksheet,
       [
         [
-          'Total Cleaning Time:',
+          'Celkem:',
           totalCleaningTime,
-          'Total Stays:',
+          'Pobyty:',
           totalStaysCleaningTime,
-          'Total Departures:',
+          'Odjezdy:',
           totalDeparturesCleaningTime,
         ],
       ],

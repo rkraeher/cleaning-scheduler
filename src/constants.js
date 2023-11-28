@@ -1,15 +1,13 @@
 export const ROOM_STATES = {
-  VACANT: 'vacant',
-  STAY: 'stay',
-  DEPARTURE: 'departure',
+  VACANT: 'volny',
+  STAY: 'pobyt',
+  DEPARTURE: 'odjezdy',
 };
 
 export const CLEANING_TIMES_IN_MINUTES = {
-  vacant: 0,
-  stay: 15,
+  volny: 0, // vacant
+  pobyt: 15, // stay
   D: 30,
   Q: 60,
   O: 120,
 };
-
-export const TOTAL_CLEANING_TIME = 'Total Cleaning Time';
