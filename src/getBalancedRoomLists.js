@@ -64,7 +64,7 @@ function distributeRooms(roomsMap) {
     updateTargetList({ roomNumber, ...roomData }, targetList);
   }
 
-  const allRoomsList = getAllRoomsList(roomsListA, roomsListB);
+  const allRoomsList = getSortedAllRoomsList(roomsListA, roomsListB);
 
   prepareOutput(roomsListA, roomsListB, allRoomsList);
 
@@ -107,7 +107,7 @@ function updateCleaningTimes(room, roomsList) {
   }
 }
 
-function getAllRoomsList(roomsListA, roomsListB) {
+function getSortedAllRoomsList(roomsListA, roomsListB) {
   const totalStaysCleaningTime =
     roomsListA.totalStaysCleaningTime + roomsListB.totalStaysCleaningTime;
   const totalDeparturesCleaningTime =
@@ -115,11 +115,20 @@ function getAllRoomsList(roomsListA, roomsListB) {
     roomsListB.totalDeparturesCleaningTime;
   const totalCleaningTime =
     roomsListA.totalCleaningTime + roomsListB.totalCleaningTime;
+
+  const rooms = [...roomsListA.rooms, ...roomsListB.rooms];
+
+  rooms.sort((a, b) => {
+    const roomNumberA = parseInt(a.roomNumber);
+    const roomNumberB = parseInt(b.roomNumber);
+    return roomNumberA - roomNumberB;
+  });
+
   return {
     totalStaysCleaningTime,
     totalDeparturesCleaningTime,
     totalCleaningTime,
-    rooms: [...roomsListA.rooms, ...roomsListB.rooms],
+    rooms,
   };
 }
 
@@ -136,6 +145,8 @@ function deleteCleaningTimeFromRoomsList(roomsList) {
     delete roomData.cleaningTime;
   }
 }
+
+// function sortByRoomNumber(roomsList) {}
 
 function formatCleaningTimeTotals(roomsLists = {}) {
   for (const list of Object.values(roomsLists)) {
