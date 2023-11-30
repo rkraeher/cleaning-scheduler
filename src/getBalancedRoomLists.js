@@ -171,8 +171,6 @@ function deleteCleaningTimeFromRoomsList(roomsList) {
   }
 }
 
-// function sortByRoomNumber(roomsList) {}
-
 function formatCleaningTimeTotals(roomsLists = {}) {
   for (const list of Object.values(roomsLists)) {
     const {
