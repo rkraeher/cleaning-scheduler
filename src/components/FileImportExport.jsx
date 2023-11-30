@@ -7,11 +7,15 @@ import {
   parseRows,
   validateRoomsData,
 } from './importUtils';
+import { Button as UploadButton } from './Button';
+import { Button as DownloadButton } from 'react95';
+import * as S from './FileImportExport.styles';
 
 export function FileImportExport() {
   const [roomsA, setRoomsA] = useState({});
   const [roomsB, setRoomsB] = useState({});
   const [allRooms, setAllRooms] = useState({});
+  const [uploadedFileName, setUploadedFileName] = useState('');
 
   function appendCleaningTimesRow(worksheet, roomsList) {
     const {
@@ -41,6 +45,8 @@ export function FileImportExport() {
 
   const importFile = async (e) => {
     const file = e.target.files[0];
+    setUploadedFileName(file.name);
+
     const jsonData = await convertToJson(file);
     const roomsData = addAvailabilityStatusToRooms(parseRows(jsonData));
 
@@ -78,14 +84,24 @@ export function FileImportExport() {
 
   return (
     <div>
-      <input type='file' accept='.xls, .xlsx, .csv' onChange={importFile} />
+      <UploadButton htmlFor='upload'>Select File</UploadButton>
+
+      {uploadedFileName && <p>{uploadedFileName}</p>}
+
+      <S.InvisibleInput
+        id='upload'
+        type='file'
+        accept='.xls, .xlsx, .csv'
+        onChange={importFile}
+      />
+
       {allRooms?.rooms?.length > 0 && (
-        <>
-          <button onClick={exportFile}>Download</button>
+        <S.DownloadSection>
+          <DownloadButton onClick={exportFile}>Download</DownloadButton>
           <p>
-            <span>rooms-list.xlsx</span>
+            <span>rooms-lists.xlsx</span>
           </p>
-        </>
+        </S.DownloadSection>
       )}
     </div>
   );

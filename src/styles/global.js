@@ -1,5 +1,5 @@
-import { styleReset, Frame as React95Frame } from 'react95';
-import styled, { createGlobalStyle } from 'styled-components';
+import { styleReset } from 'react95';
+import { createGlobalStyle } from 'styled-components';
 import windowsWallpaper from '../images/windows-wallpaper.jpeg';
 import ms_sans_serif from 'react95/dist/fonts/ms_sans_serif.woff2';
 import ms_sans_serif_bold from 'react95/dist/fonts/ms_sans_serif_bold.woff2';
@@ -32,11 +32,4 @@ export const GlobalStyles = createGlobalStyle`
     align-items: center;
     justify-content: center;
   }
-`;
-
-export const Frame = styled(React95Frame)`
-  display: flex;
-  padding: 0.5rem;
-  align-items: center;
-  flex-direction: column;
 `;

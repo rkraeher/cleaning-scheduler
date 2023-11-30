@@ -1,17 +1,20 @@
 import { FileImportExport } from './components/FileImportExport';
 import { ThemeProvider } from 'styled-components';
-import * as S from './styles/global';
+import * as Shared from './styles/global';
+import * as S from './App.styles';
 import original from 'react95/dist/themes/original';
 
 export default function App() {
   return (
     <>
-      <S.GlobalStyles />
+      <Shared.GlobalStyles />
       <ThemeProvider theme={original}>
-        <S.Frame variant='outside' shadow>
-          <h1>Cleaning Calculator</h1>
-          <FileImportExport />
-        </S.Frame>
+        <S.Container variant='outside' shadow>
+          <main>
+            <S.Title>Cleaning Calculator</S.Title>
+            <FileImportExport />
+          </main>
+        </S.Container>
       </ThemeProvider>
     </>
   );
