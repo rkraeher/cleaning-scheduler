@@ -8,6 +8,7 @@ import {
   validateRoomsData,
 } from './importUtils';
 import * as S from './FileImportExport.styles';
+import { ProgressBar } from './ProgressBar';
 
 export function FileImportExport() {
   const [roomsA, setRoomsA] = useState({});
@@ -115,6 +116,8 @@ export function FileImportExport() {
           )}
         </S.Text>
       </S.DownloadSection>
+
+      <ProgressBar />
     </S.Container>
   );
 }

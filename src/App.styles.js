@@ -15,4 +15,5 @@ export const Container = styled(React95Frame)`
 
 export const Title = styled.h1`
   align-self: center;
+  font-weight: bold;
 `;

@@ -9,6 +9,11 @@ export const Container = styled.div`
   section {
     display: flex;
   }
+
+  & > section:last-child {
+    margin-left: 1rem;
+    margin-right: 1rem;
+  }
 `;
 
 export const DownloadButton = styled(React95Button)`
