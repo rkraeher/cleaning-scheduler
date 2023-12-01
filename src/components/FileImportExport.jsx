@@ -7,7 +7,6 @@ import {
   parseRows,
   validateRoomsData,
 } from './importUtils';
-import { Button as UploadButton } from './Button';
 import { Button as DownloadButton } from 'react95';
 import * as S from './FileImportExport.styles';
 
@@ -50,6 +49,7 @@ export function FileImportExport() {
     const jsonData = await convertToJson(file);
     const roomsData = addAvailabilityStatusToRooms(parseRows(jsonData));
 
+    // TODO change alert to a UI embedded warning
     if (!validateRoomsData(roomsData)) {
       alert(
         'Careful! Your input data is missing some expected data. Script results may be inaccurate.'
@@ -83,26 +83,39 @@ export function FileImportExport() {
   }, [roomsA, roomsB, allRooms]);
 
   return (
-    <div>
-      <UploadButton htmlFor='upload'>Select File</UploadButton>
+    <S.Container>
+      <section>
+        <S.UploadButton htmlFor='upload'>Select File</S.UploadButton>
 
-      {uploadedFileName && <p>{uploadedFileName}</p>}
+        <S.Text>
+          {uploadedFileName ? (
+            <span>{uploadedFileName}</span>
+          ) : (
+            <span>No file selected</span>
+          )}
+        </S.Text>
 
-      <S.InvisibleInput
-        id='upload'
-        type='file'
-        accept='.xls, .xlsx, .csv'
-        onChange={importFile}
-      />
+        <S.InvisibleInput
+          id='upload'
+          type='file'
+          accept='.xls, .xlsx, .csv'
+          onChange={importFile}
+        />
+      </section>
 
-      {allRooms?.rooms?.length > 0 && (
-        <S.DownloadSection>
-          <DownloadButton onClick={exportFile}>Download</DownloadButton>
-          <p>
-            <span>rooms-lists.xlsx</span>
-          </p>
-        </S.DownloadSection>
-      )}
-    </div>
+      <S.DownloadSection>
+        <DownloadButton style={{ width: '50%' }} onClick={exportFile}>
+          Download
+        </DownloadButton>
+
+        <S.Text>
+          {allRooms?.rooms?.length > 0 ? (
+            <span>rooms-list.xlsx</span>
+          ) : (
+            <span>... </span>
+          )}
+        </S.Text>
+      </S.DownloadSection>
+    </S.Container>
   );
 }

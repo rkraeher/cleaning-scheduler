@@ -5,7 +5,7 @@ export const Container = styled(React95Frame)`
   main {
     display: flex;
     flex-direction: column;
-    width: 25vw;
+    width: 40vw;
   }
 
   & * {
