@@ -1,5 +1,5 @@
 import { read, utils } from 'xlsx';
-import { ROOM_STATES } from '../constants';
+import { ROOM_STATES } from '../../constants';
 
 export function isRoomNumberAsString(value) {
   if (typeof value === 'string' && value.trim() !== '') {

@@ -1,17 +1,24 @@
 import { useState, useCallback } from 'react';
 import { utils, writeFileXLSX } from 'xlsx';
-import { getBalancedRoomLists } from '../getBalancedRoomLists';
+import { getBalancedRoomLists } from '../../scripts/getBalancedRoomLists';
 import {
   addAvailabilityStatusToRooms,
   convertToJson,
   parseRows,
   validateRoomsData,
 } from './importUtils';
+import * as S from './FileHandler.styles';
+import { ProgressBar } from '../ProgressBar/ProgressBar';
 
-export function FileImportExport() {
+export function FileHandler() {
   const [roomsA, setRoomsA] = useState({});
   const [roomsB, setRoomsB] = useState({});
   const [allRooms, setAllRooms] = useState({});
+  const [uploadedFileName, setUploadedFileName] = useState('No file selected');
+  const [isUploading, setIsUploading] = useState(false);
+  const [outputFilename, setOutputFilename] = useState('...');
+  const [isDownloadDisabled, setIsDownloadDisabled] = useState(true);
+  const [progressBarKey, setProgressBarKey] = useState(0);
 
   function appendCleaningTimesRow(worksheet, roomsList) {
     const {
@@ -41,9 +48,11 @@ export function FileImportExport() {
 
   const importFile = async (e) => {
     const file = e.target.files[0];
+
     const jsonData = await convertToJson(file);
     const roomsData = addAvailabilityStatusToRooms(parseRows(jsonData));
 
+    // TODO change alert to a UI embedded warning
     if (!validateRoomsData(roomsData)) {
       alert(
         'Careful! Your input data is missing some expected data. Script results may be inaccurate.'
@@ -53,9 +62,17 @@ export function FileImportExport() {
     const { roomsListA, roomsListB, allRoomsList } =
       getBalancedRoomLists(roomsData);
 
+    setUploadedFileName(file.name);
+    setIsUploading(true);
     setRoomsA(roomsListA);
     setRoomsB(roomsListB);
     setAllRooms(allRoomsList);
+    setProgressBarKey((prevKey) => prevKey + 1);
+  };
+
+  const onUploadComplete = () => {
+    setOutputFilename('calculated-rooms-list.xlsx');
+    setIsDownloadDisabled(false);
   };
 
   const exportFile = useCallback(() => {
@@ -77,16 +94,41 @@ export function FileImportExport() {
   }, [roomsA, roomsB, allRooms]);
 
   return (
-    <div>
-      <input type='file' accept='.xls, .xlsx, .csv' onChange={importFile} />
-      {allRooms?.rooms?.length > 0 && (
-        <>
-          <button onClick={exportFile}>Download</button>
-          <p>
-            <span>rooms-list.xlsx</span>
-          </p>
-        </>
-      )}
-    </div>
+    <S.Container>
+      <section>
+        <S.UploadButton htmlFor='upload'>Select File</S.UploadButton>
+
+        <S.Text>
+          <span>{uploadedFileName}</span>
+        </S.Text>
+
+        <S.InvisibleInput
+          id='upload'
+          type='file'
+          accept='.xls, .xlsx'
+          onChange={importFile}
+        />
+      </section>
+
+      <S.SeparatorContainer>
+        <S.Separator size='97%' />
+      </S.SeparatorContainer>
+
+      <S.DownloadSection>
+        <S.DownloadButton disabled={isDownloadDisabled} onClick={exportFile}>
+          Download
+        </S.DownloadButton>
+
+        <S.Text>
+          <span>{outputFilename}</span>
+        </S.Text>
+      </S.DownloadSection>
+
+      <ProgressBar
+        isUploading={isUploading}
+        key={progressBarKey}
+        onUploadComplete={onUploadComplete}
+      />
+    </S.Container>
   );
 }

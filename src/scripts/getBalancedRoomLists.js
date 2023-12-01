@@ -1,8 +1,36 @@
-import { isTimeCode } from './components/importUtils';
-import { CLEANING_TIMES_IN_MINUTES, ROOM_STATES } from './constants';
+import { isTimeCode } from '../components/FileHandler/importUtils';
+import { CLEANING_TIMES_IN_MINUTES, ROOM_STATES } from '../constants';
+
+/**
+ * Represents a mapping of room numbers to room data. This is used internally for calculating and balancing the cleaning times
+ * @typedef {Object.<roomNumber: string, {
+ *   cleaningTime: number,
+ *   cleaningTimeCode: string,
+ *   availability: string,
+ *   leftover: string,
+ *   roomState: string
+ * }>} RoomsMap
+ */
+
+/**
+ * Represents a list of rooms with associated cleaning time totals. This is the structure to use for ouput when creating the spreadsheet
+ * @typedef {Object} RoomsList
+ * @property {number} totalStaysCleaningTime - The total cleaning time for stay rooms in minutes.
+ * @property {number} totalDeparturesCleaningTime - The total cleaning time for departure rooms in minutes.
+ * @property {number} totalCleaningTime - The total cleaning time for all rooms in minutes.
+ * @property {Object[]} rooms - An array of room objects.
+ * @property {number} rooms[].roomNumber - The room number.
+ * @property {string} rooms[].cleaningTimeCode - The cleaning time code for the room.
+ * @property {string} rooms[].availability - The availability status of the room.
+ * @property {string} rooms[].leftover - The leftover status of the room.
+ * @property {string} rooms[].roomState - The state of the room (e.g., VACANT, STAY, DEPARTURE).
+ */
 
 export function getBalancedRoomLists(rooms) {
   if (!rooms || rooms.length === 0) {
+    alert(
+      'Unexpected data in the uploaded file. Double check your input and try again.'
+    );
     throw new Error('Input data is empty or undefined.');
   }
 
@@ -64,7 +92,7 @@ function distributeRooms(roomsMap) {
     updateTargetList({ roomNumber, ...roomData }, targetList);
   }
 
-  const allRoomsList = getAllRoomsList(roomsListA, roomsListB);
+  const allRoomsList = getSortedAllRoomsList(roomsListA, roomsListB);
 
   prepareOutput(roomsListA, roomsListB, allRoomsList);
 
@@ -107,7 +135,7 @@ function updateCleaningTimes(room, roomsList) {
   }
 }
 
-function getAllRoomsList(roomsListA, roomsListB) {
+function getSortedAllRoomsList(roomsListA, roomsListB) {
   const totalStaysCleaningTime =
     roomsListA.totalStaysCleaningTime + roomsListB.totalStaysCleaningTime;
   const totalDeparturesCleaningTime =
@@ -115,11 +143,20 @@ function getAllRoomsList(roomsListA, roomsListB) {
     roomsListB.totalDeparturesCleaningTime;
   const totalCleaningTime =
     roomsListA.totalCleaningTime + roomsListB.totalCleaningTime;
+
+  const rooms = [...roomsListA.rooms, ...roomsListB.rooms];
+
+  rooms.sort((a, b) => {
+    const roomNumberA = parseInt(a.roomNumber);
+    const roomNumberB = parseInt(b.roomNumber);
+    return roomNumberA - roomNumberB;
+  });
+
   return {
     totalStaysCleaningTime,
     totalDeparturesCleaningTime,
     totalCleaningTime,
-    rooms: [...roomsListA.rooms, ...roomsListB.rooms],
+    rooms,
   };
 }
 
