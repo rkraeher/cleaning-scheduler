@@ -3,6 +3,7 @@ import { ThemeProvider } from 'styled-components';
 import * as Shared from './styles/global';
 import * as S from './App.styles';
 import original from 'react95/dist/themes/original';
+import { Anchor } from 'react95';
 
 export default function App() {
   return (
@@ -15,6 +16,15 @@ export default function App() {
             <FileImportExport />
           </main>
         </S.Container>
+        <S.Footer>
+          <Anchor
+            href='https://github.com/rkraeher'
+            target='_blank'
+            rel='noreferrer'
+          >
+            https://github.com/rkraeher
+          </Anchor>
+        </S.Footer>
       </ThemeProvider>
     </>
   );
