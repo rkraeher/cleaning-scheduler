@@ -1,4 +1,4 @@
-import { FileImportExport } from './components/FileImportExport';
+import { FileHandler } from './components/FileHandler/FileHandler';
 import { ThemeProvider } from 'styled-components';
 import * as Shared from './styles/global';
 import * as S from './App.styles';
@@ -13,7 +13,7 @@ export default function App() {
         <S.Container variant='outside' shadow>
           <main>
             <S.Title>Cleaning Calculator</S.Title>
-            <FileImportExport />
+            <FileHandler />
           </main>
         </S.Container>
         <S.Footer>

@@ -1,5 +1,5 @@
-import { isTimeCode } from './components/importUtils';
-import { CLEANING_TIMES_IN_MINUTES, ROOM_STATES } from './constants';
+import { isTimeCode } from '../components/FileHandler/importUtils';
+import { CLEANING_TIMES_IN_MINUTES, ROOM_STATES } from '../constants';
 
 /**
  * Represents a mapping of room numbers to room data. This is used internally for calculating and balancing the cleaning times

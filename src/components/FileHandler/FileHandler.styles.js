@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { Button } from './Button';
+import { Button } from '../Button/Button';
 import {
   Button as React95Button,
   Separator as React95Separator,

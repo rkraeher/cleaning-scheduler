@@ -1,20 +1,20 @@
 import { useState, useCallback } from 'react';
 import { utils, writeFileXLSX } from 'xlsx';
-import { getBalancedRoomLists } from '../getBalancedRoomLists';
+import { getBalancedRoomLists } from '../../scripts/getBalancedRoomLists';
 import {
   addAvailabilityStatusToRooms,
   convertToJson,
   parseRows,
   validateRoomsData,
 } from './importUtils';
-import * as S from './FileImportExport.styles';
-import { ProgressBar } from './ProgressBar';
+import * as S from './FileHandler.styles';
+import { ProgressBar } from '../ProgressBar/ProgressBar';
 
-export function FileImportExport() {
+export function FileHandler() {
   const [roomsA, setRoomsA] = useState({});
   const [roomsB, setRoomsB] = useState({});
   const [allRooms, setAllRooms] = useState({});
-  const [uploadedFileName, setUploadedFileName] = useState('');
+  const [uploadedFileName, setUploadedFileName] = useState('No file selected');
   const [isUploading, setIsUploading] = useState(false);
   const [outputFilename, setOutputFilename] = useState('...');
   const [isDownloadDisabled, setIsDownloadDisabled] = useState(true);
@@ -99,23 +99,21 @@ export function FileImportExport() {
         <S.UploadButton htmlFor='upload'>Select File</S.UploadButton>
 
         <S.Text>
-          {uploadedFileName ? (
-            <span>{uploadedFileName}</span>
-          ) : (
-            <span>No file selected</span>
-          )}
+          <span>{uploadedFileName}</span>
         </S.Text>
 
         <S.InvisibleInput
           id='upload'
           type='file'
-          accept='.xls, .xlsx, .csv'
+          accept='.xls, .xlsx'
           onChange={importFile}
         />
       </section>
+
       <S.SeparatorContainer>
         <S.Separator size='97%' />
       </S.SeparatorContainer>
+
       <S.DownloadSection>
         <S.DownloadButton disabled={isDownloadDisabled} onClick={exportFile}>
           Download

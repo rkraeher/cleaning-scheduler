@@ -14,8 +14,8 @@ module.exports = {
   overrides: [
     {
       files: [
-        './src/getBalancedRoomLists.test.js',
-        './src/components/FileImportExport.test.js',
+        './src/scripts/getBalancedRoomLists.test.js',
+        './src/components/FileHandler/FileHandler.test.js',
       ],
       env: {
         jest: true,

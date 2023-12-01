@@ -1,4 +1,4 @@
-import { isRoomNumberAsString, parseRow, parseRows } from './importUtils';
+import { isRoomNumberAsString, parseRow, parseRows } from '../importUtils';
 
 describe('isRoomNumberAsString', () => {
   it('should return true for a valid number string', () => {
