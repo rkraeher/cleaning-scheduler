@@ -6,6 +6,10 @@ export const Container = styled(React95Frame)`
     display: flex;
     flex-direction: column;
     width: 40vw;
+
+    @media (max-width: 768px) {
+      width: 60vw;
+    }
   }
 
   & * {
