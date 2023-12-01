@@ -18,6 +18,7 @@ export function FileImportExport() {
   const [isUploading, setIsUploading] = useState(false);
   const [outputFilename, setOutputFilename] = useState('...');
   const [isDownloadDisabled, setIsDownloadDisabled] = useState(true);
+  const [progressBarKey, setProgressBarKey] = useState(0);
 
   function appendCleaningTimesRow(worksheet, roomsList) {
     const {
@@ -66,6 +67,7 @@ export function FileImportExport() {
     setRoomsA(roomsListA);
     setRoomsB(roomsListB);
     setAllRooms(allRoomsList);
+    setProgressBarKey((prevKey) => prevKey + 1);
   };
 
   const onUploadComplete = () => {
@@ -126,6 +128,7 @@ export function FileImportExport() {
 
       <ProgressBar
         isUploading={isUploading}
+        key={progressBarKey}
         onUploadComplete={onUploadComplete}
       />
     </S.Container>

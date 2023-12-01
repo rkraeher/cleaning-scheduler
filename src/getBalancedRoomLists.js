@@ -28,6 +28,9 @@ import { CLEANING_TIMES_IN_MINUTES, ROOM_STATES } from './constants';
 
 export function getBalancedRoomLists(rooms) {
   if (!rooms || rooms.length === 0) {
+    alert(
+      'Unexpected data in the uploaded file. Double check your input and try again.'
+    );
     throw new Error('Input data is empty or undefined.');
   }
 
