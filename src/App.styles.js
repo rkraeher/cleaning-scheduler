@@ -10,6 +10,10 @@ export const Container = styled(React95Frame)`
     @media (max-width: 768px) {
       width: 60vw;
     }
+
+    @media (max-width: 480px) {
+      width: 80vw;
+    }
   }
 
   & * {
