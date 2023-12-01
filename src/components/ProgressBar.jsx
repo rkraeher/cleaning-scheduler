@@ -2,23 +2,36 @@ import { useEffect, useState } from 'react';
 import { ProgressBar as React95ProgressBar } from 'react95';
 import * as S from './ProgressBar.styles';
 
-export const ProgressBar = () => {
+// eslint-disable-next-line react/prop-types
+export const ProgressBar = ({ isUploading, onUploadComplete }) => {
   const [percent, setPercent] = useState(0);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setPercent((previousPercent) => {
-        if (previousPercent === 100) {
-          return 0;
-        }
-        const diff = Math.random() * 10;
-        return Math.min(previousPercent + diff, 100);
-      });
-    }, 500);
+    let timer;
+
+    const uploadFile = () => {
+      timer = setInterval(() => {
+        setPercent((previousPercent) => {
+          if (previousPercent === 100) {
+            clearInterval(timer);
+            onUploadComplete();
+            return 100;
+          }
+          const diff = Math.random() * 50; // Adjust the progress speed as needed
+          return Math.min(previousPercent + diff, 100);
+        });
+      }, 500);
+    };
+
+    if (isUploading) {
+      uploadFile();
+    }
+
     return () => {
       clearInterval(timer);
     };
-  }, []);
+  }, [isUploading, onUploadComplete]);
+
   return (
     <S.Container>
       <React95ProgressBar value={Math.floor(percent)} />

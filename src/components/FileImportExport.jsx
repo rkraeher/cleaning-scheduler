@@ -15,6 +15,9 @@ export function FileImportExport() {
   const [roomsB, setRoomsB] = useState({});
   const [allRooms, setAllRooms] = useState({});
   const [uploadedFileName, setUploadedFileName] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  const [outputFilename, setOutputFilename] = useState('...');
+  const [isDownloadDisabled, setIsDownloadDisabled] = useState(true);
 
   function appendCleaningTimesRow(worksheet, roomsList) {
     const {
@@ -44,7 +47,6 @@ export function FileImportExport() {
 
   const importFile = async (e) => {
     const file = e.target.files[0];
-    setUploadedFileName(file.name);
 
     const jsonData = await convertToJson(file);
     const roomsData = addAvailabilityStatusToRooms(parseRows(jsonData));
@@ -59,9 +61,16 @@ export function FileImportExport() {
     const { roomsListA, roomsListB, allRoomsList } =
       getBalancedRoomLists(roomsData);
 
+    setUploadedFileName(file.name);
+    setIsUploading(true);
     setRoomsA(roomsListA);
     setRoomsB(roomsListB);
     setAllRooms(allRoomsList);
+  };
+
+  const onUploadComplete = () => {
+    setOutputFilename('calculated-rooms-list.xlsx');
+    setIsDownloadDisabled(false);
   };
 
   const exportFile = useCallback(() => {
@@ -106,18 +115,19 @@ export function FileImportExport() {
         <S.Separator size='97%' />
       </S.SeparatorContainer>
       <S.DownloadSection>
-        <S.DownloadButton onClick={exportFile}>Download</S.DownloadButton>
+        <S.DownloadButton disabled={isDownloadDisabled} onClick={exportFile}>
+          Download
+        </S.DownloadButton>
 
         <S.Text>
-          {allRooms?.rooms?.length > 0 ? (
-            <span>calculated-room-lists.xlsx</span>
-          ) : (
-            <span>... </span>
-          )}
+          <span>{outputFilename}</span>
         </S.Text>
       </S.DownloadSection>
 
-      <ProgressBar />
+      <ProgressBar
+        isUploading={isUploading}
+        onUploadComplete={onUploadComplete}
+      />
     </S.Container>
   );
 }
