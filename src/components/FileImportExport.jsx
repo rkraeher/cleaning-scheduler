@@ -7,7 +7,6 @@ import {
   parseRows,
   validateRoomsData,
 } from './importUtils';
-import { Button as DownloadButton } from 'react95';
 import * as S from './FileImportExport.styles';
 
 export function FileImportExport() {
@@ -102,15 +101,15 @@ export function FileImportExport() {
           onChange={importFile}
         />
       </section>
-
+      <S.SeparatorContainer>
+        <S.Separator size='97%' />
+      </S.SeparatorContainer>
       <S.DownloadSection>
-        <DownloadButton style={{ width: '50%' }} onClick={exportFile}>
-          Download
-        </DownloadButton>
+        <S.DownloadButton onClick={exportFile}>Download</S.DownloadButton>
 
         <S.Text>
           {allRooms?.rooms?.length > 0 ? (
-            <span>rooms-list.xlsx</span>
+            <span>calculated-room-lists.xlsx</span>
           ) : (
             <span>... </span>
           )}
