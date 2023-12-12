@@ -10,6 +10,7 @@ export function isRoomNumberAsString(value) {
 
 export function parseRow(row) {
   let parsedRow = [];
+  let hasTimeCodeCell = false;
   for (const element of row) {
     let cell = element;
 
@@ -18,8 +19,12 @@ export function parseRow(row) {
     const isCellRelevant =
       (cell && isRoomNumberAsString(cell)) ||
       isCleanlinessStatus(cell) ||
-      isTimeCode(cell) ||
       isAvailability(cell);
+
+    if (isTimeCode(cell) && !hasTimeCodeCell) {
+      hasTimeCodeCell = true;
+      parsedRow.push(cell);
+    }
 
     if (isCellRelevant) parsedRow.push(cell);
   }
@@ -36,13 +41,14 @@ export function parseRow(row) {
     // matches for available or till mm.dd. in English and Czech
     // permits single or double digit day.month as
     const regexEnglish = /^(available|till \d{1,2}\.\d{1,2})$/;
-    const regexCzech = /^(volný|volny|do \d{1,2}\.\d{1,2})$/;
+    const regexCzech = /^(volný|volny|v o l n ý|do \d{1,2}\.\d{1,2})$/;
     return regexCzech.test(cell) || regexEnglish.test(cell);
   }
 }
 
 export function isTimeCode(cell) {
   // matches D, Q, or O followed by either two capital letters or a capital letter and a number
+  // it would be better to have a more precise regex to match against only known timeCodes
   const regex = /^(D|Q|O)([A-Z]{2}|[A-Z]\d)$/;
   return regex.test(cell);
 }
@@ -76,7 +82,6 @@ export async function convertToJson(file) {
 
 export function addAvailabilityStatusToRooms(rooms = []) {
   for (const room of rooms) room.push(getRoomState(room));
-
   return rooms;
 
   function getRoomState(room) {
