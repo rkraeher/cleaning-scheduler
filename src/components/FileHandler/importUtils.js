@@ -92,7 +92,8 @@ export function addAvailabilityStatusToRooms(rooms = []) {
     const isRoomVacant =
       room.includes('available') ||
       room.includes('volný') ||
-      room.includes('volny');
+      room.includes('volny') ||
+      room.includes('v o l n ý');
 
     if (isUncleanedLeftoverRoom || (dateString && isDeparture(dateString))) {
       return ROOM_STATES.DEPARTURE;
