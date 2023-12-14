@@ -82,10 +82,12 @@ export function addAvailabilityStatusToRooms(rooms = []) {
       room.includes('volny') ||
       room.includes('v o l n ý');
 
-    if (dateString && isDeparture(dateString)) {
+    const isScheduledDeparture =
+      dateString && !isRoomVacant && isDeparture(dateString);
+
+    if (isScheduledDeparture) {
       return ROOM_STATES.DEPARTURE;
     }
-
     if (isRoomVacant) {
       return ROOM_STATES.VACANT;
     } else {
@@ -124,9 +126,9 @@ export function addAvailabilityStatusToRooms(rooms = []) {
 }
 
 function alertOnceForSuspiciousDate() {
-  // it should just not print anything in this case, because the output data will be useless anyway
+  // it should flag them in the output data
   alert(
-    'Double check your input. Departure dates are earlier than current date. They will be recorded as "stays."'
+    'Double check your input. Some departure dates are listed as before today\'s date. They will be recorded as "stays."'
   );
   // eslint-disable-next-line no-func-assign
   alertOnceForSuspiciousDate = () => false;
