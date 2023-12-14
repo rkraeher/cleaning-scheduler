@@ -112,7 +112,7 @@ export function addAvailabilityStatusToRooms(rooms = []) {
 
     return differenceInDays < 0
       ? alertOnceForSuspiciousDate()
-      : 0 <= differenceInDays < 2;
+      : 0 <= differenceInDays && differenceInDays < 2;
 
     function isNextYear(month) {
       const currentMonthIndex = new Date().getMonth();
