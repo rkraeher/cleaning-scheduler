@@ -29,17 +29,16 @@ export function parseRow(row) {
   return parsedRow;
 
   function isAvailability(cell) {
-    // matches for available or till mm.dd. in English and Czech
+    // matches ${phrase} + dd.mm date format
     // permits single or double digit day.month as
-    const regexEnglish = /^(available|till \d{1,2}\.\d{1,2})$/;
     const regexCzech = /^(volný|volny|v o l n ý|do \d{1,2}\.\d{1,2})$/;
-    return regexCzech.test(cell) || regexEnglish.test(cell);
+    return regexCzech.test(cell);
   }
 }
 
 export function isTimeCode(cell) {
   // matches D, Q, or O followed by either two capital letters or a capital letter and a number
-  // it would be better to have a more precise regex to match against only known timeCodes
+  // it would be better to have a more precise regex to match against only known timeCodes, but there isn't enough provided info
   const regex = /^(D|Q|O)([A-Z]{2}|[A-Z]\d)$/;
   return regex.test(cell);
 }
@@ -79,7 +78,6 @@ export function addAvailabilityStatusToRooms(rooms = []) {
     const dateString = room[2].split(' ')[1];
 
     const isRoomVacant =
-      room.includes('available') ||
       room.includes('volný') ||
       room.includes('volny') ||
       room.includes('v o l n ý');
