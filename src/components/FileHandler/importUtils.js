@@ -71,7 +71,15 @@ export async function convertToJson(file) {
 }
 
 export function addAvailabilityStatusToRooms(rooms = []) {
-  for (const room of rooms) room.push(getRoomState(room));
+  for (const room of rooms) {
+    var isDepartureDateSuspicious = false;
+    room.push(getRoomState(room));
+
+    if (isDepartureDateSuspicious) {
+      // add a warning flag for departures scheduled for before today's date and record them as 'stays' to be double checked manually
+      room.push('!!');
+    }
+  }
   return rooms;
 
   function getRoomState(room) {
@@ -93,42 +101,43 @@ export function addAvailabilityStatusToRooms(rooms = []) {
     } else {
       return ROOM_STATES.STAY;
     }
-  }
 
-  function isDeparture(date) {
-    const [day, month] = date.split('.');
+    function isDeparture(date) {
+      const [day, month] = date.split('.');
 
-    const currentYear = new Date().getFullYear();
+      const currentYear = new Date().getFullYear();
 
-    // we check for the year-end edgecase
-    const year = isNextYear(month) ? currentYear + 1 : currentYear;
+      // we check for the year-end edgecase
+      const year = isNextYear(month) ? currentYear + 1 : currentYear;
 
-    const dateString = `${month}/${day}/${year}`;
-    const departureDate = new Date(dateString);
-    const currentDate = new Date();
+      const dateString = `${month}/${day}/${year}`;
+      const departureDate = new Date(dateString);
+      const currentDate = new Date();
 
-    const differenceInTime = departureDate.getTime() - currentDate.getTime();
-    const differenceInDays = Math.ceil(
-      differenceInTime / (1000 * 60 * 60 * 24)
-    );
+      const differenceInTime = departureDate.getTime() - currentDate.getTime();
+      const differenceInDays = Math.ceil(
+        differenceInTime / (1000 * 60 * 60 * 24)
+      );
 
-    return differenceInDays < 0
-      ? alertOnceForSuspiciousDate()
-      : 0 <= differenceInDays && differenceInDays < 2;
+      if (differenceInDays < 0) {
+        isDepartureDateSuspicious = true;
+        alertOnceForSuspiciousDate();
+      } else {
+        return 0 <= differenceInDays && differenceInDays < 2;
+      }
 
-    function isNextYear(month) {
-      const currentMonthIndex = new Date().getMonth();
-      // JS Date months are zero indexed
-      const monthIndex = month * 1 - 1;
-      return !!(currentMonthIndex === 11 && monthIndex === 0);
+      function isNextYear(month) {
+        const currentMonthIndex = new Date().getMonth();
+        // JS Date months are zero indexed
+        const monthIndex = month * 1 - 1;
+        return !!(currentMonthIndex === 11 && monthIndex === 0);
+      }
     }
   }
 }
-
 function alertOnceForSuspiciousDate() {
-  // it should flag them in the output data
   alert(
-    'Double check your input. Some departure dates are listed as before today\'s date. They will be recorded as "stays."'
+    'Double check your input. Some departure dates are listed as before today\'s date. They will be recorded as "stays" and include a warning mark in the last column.'
   );
   // eslint-disable-next-line no-func-assign
   alertOnceForSuspiciousDate = () => false;

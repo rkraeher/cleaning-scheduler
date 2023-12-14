@@ -40,7 +40,8 @@ function mapCleaningTimeToRooms(rooms) {
   const roomsMap = {};
 
   for (const room of rooms) {
-    const [roomNumber, cleaningTimeCode, availability, roomState] = room;
+    const [roomNumber, cleaningTimeCode, availability, roomState, badDate] =
+      room;
 
     if (!isValidCleaningTimeCode(cleaningTimeCode)) {
       throw new Error('Invalid cleaningTimeCode found in the input data.');
@@ -58,6 +59,7 @@ function mapCleaningTimeToRooms(rooms) {
       cleaningTimeCode,
       availability,
       roomState,
+      badDate,
     };
   }
 
