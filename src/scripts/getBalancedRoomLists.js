@@ -7,7 +7,6 @@ import { CLEANING_TIMES_IN_MINUTES, ROOM_STATES } from '../constants';
  *   cleaningTime: number,
  *   cleaningTimeCode: string,
  *   availability: string,
- *   leftover: string,
  *   roomState: string
  * }>} RoomsMap
  */
@@ -22,7 +21,6 @@ import { CLEANING_TIMES_IN_MINUTES, ROOM_STATES } from '../constants';
  * @property {number} rooms[].roomNumber - The room number.
  * @property {string} rooms[].cleaningTimeCode - The cleaning time code for the room.
  * @property {string} rooms[].availability - The availability status of the room.
- * @property {string} rooms[].leftover - The leftover status of the room.
  * @property {string} rooms[].roomState - The state of the room (e.g., VACANT, STAY, DEPARTURE).
  */
 
@@ -42,8 +40,7 @@ function mapCleaningTimeToRooms(rooms) {
   const roomsMap = {};
 
   for (const room of rooms) {
-    const [roomNumber, cleaningTimeCode, availability, leftover, roomState] =
-      room;
+    const [roomNumber, cleaningTimeCode, availability, roomState] = room;
 
     if (!isValidCleaningTimeCode(cleaningTimeCode)) {
       throw new Error('Invalid cleaningTimeCode found in the input data.');
@@ -60,7 +57,6 @@ function mapCleaningTimeToRooms(rooms) {
       cleaningTime,
       cleaningTimeCode,
       availability,
-      leftover,
       roomState,
     };
   }

@@ -17,9 +17,7 @@ export function parseRow(row) {
     if (typeof cell === 'string') cell = cell.trim();
 
     const isCellRelevant =
-      (cell && isRoomNumberAsString(cell)) ||
-      isCleanlinessStatus(cell) ||
-      isAvailability(cell);
+      (cell && isRoomNumberAsString(cell)) || isAvailability(cell);
 
     if (isTimeCode(cell) && !hasTimeCodeCell) {
       hasTimeCodeCell = true;
@@ -29,13 +27,6 @@ export function parseRow(row) {
     if (isCellRelevant) parsedRow.push(cell);
   }
   return parsedRow;
-
-  function isCleanlinessStatus(cell) {
-    return cell.length === 1 && (cell === 'U' || cell === 'N');
-    // if cell==='C' throw an error/warning about incorrect language
-    // (make sure to upload doc in Czech, or you may get incorrect results)
-    // should also handle the 'available' similarly
-  }
 
   function isAvailability(cell) {
     // matches for available or till mm.dd. in English and Czech
@@ -85,8 +76,6 @@ export function addAvailabilityStatusToRooms(rooms = []) {
   return rooms;
 
   function getRoomState(room) {
-    const isUncleanedLeftoverRoom = room.includes('N');
-
     const dateString = room[2].split(' ')[1];
 
     const isRoomVacant =
@@ -95,7 +84,7 @@ export function addAvailabilityStatusToRooms(rooms = []) {
       room.includes('volny') ||
       room.includes('v o l n ý');
 
-    if (isUncleanedLeftoverRoom || (dateString && isDeparture(dateString))) {
+    if (dateString && isDeparture(dateString)) {
       return ROOM_STATES.DEPARTURE;
     }
 
@@ -137,6 +126,7 @@ export function addAvailabilityStatusToRooms(rooms = []) {
 }
 
 function alertOnceForSuspiciousDate() {
+  // it should just not print anything in this case, because the output data will be useless anyway
   alert(
     'Double check your input. Departure dates are earlier than current date. They will be recorded as "stays."'
   );
@@ -145,5 +135,5 @@ function alertOnceForSuspiciousDate() {
 }
 
 export function validateRoomsData(roomsData) {
-  return roomsData.every((cell) => cell.length === 5);
+  return roomsData.every((cell) => cell.length === 4);
 }
