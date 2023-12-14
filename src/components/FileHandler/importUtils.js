@@ -142,7 +142,3 @@ function alertOnceForSuspiciousDate() {
   // eslint-disable-next-line no-func-assign
   alertOnceForSuspiciousDate = () => false;
 }
-
-export function validateRoomsData(roomsData) {
-  return roomsData.every((cell) => cell.length === 4);
-}
