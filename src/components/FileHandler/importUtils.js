@@ -17,9 +17,7 @@ export function parseRow(row) {
     if (typeof cell === 'string') cell = cell.trim();
 
     const isCellRelevant =
-      (cell && isRoomNumberAsString(cell)) ||
-      isCleanlinessStatus(cell) ||
-      isAvailability(cell);
+      (cell && isRoomNumberAsString(cell)) || isAvailability(cell);
 
     if (isTimeCode(cell) && !hasTimeCodeCell) {
       hasTimeCodeCell = true;
@@ -30,25 +28,17 @@ export function parseRow(row) {
   }
   return parsedRow;
 
-  function isCleanlinessStatus(cell) {
-    return cell.length === 1 && (cell === 'U' || cell === 'N');
-    // if cell==='C' throw an error/warning about incorrect language
-    // (make sure to upload doc in Czech, or you may get incorrect results)
-    // should also handle the 'available' similarly
-  }
-
   function isAvailability(cell) {
-    // matches for available or till mm.dd. in English and Czech
+    // matches ${phrase} + dd.mm date format
     // permits single or double digit day.month as
-    const regexEnglish = /^(available|till \d{1,2}\.\d{1,2})$/;
     const regexCzech = /^(volný|volny|v o l n ý|do \d{1,2}\.\d{1,2})$/;
-    return regexCzech.test(cell) || regexEnglish.test(cell);
+    return regexCzech.test(cell);
   }
 }
 
 export function isTimeCode(cell) {
   // matches D, Q, or O followed by either two capital letters or a capital letter and a number
-  // it would be better to have a more precise regex to match against only known timeCodes
+  // it would be better to have a more precise regex to match against only known timeCodes, but there isn't enough provided info
   const regex = /^(D|Q|O)([A-Z]{2}|[A-Z]\d)$/;
   return regex.test(cell);
 }
@@ -81,69 +71,74 @@ export async function convertToJson(file) {
 }
 
 export function addAvailabilityStatusToRooms(rooms = []) {
-  for (const room of rooms) room.push(getRoomState(room));
+  for (const room of rooms) {
+    var isDepartureDateSuspicious = false;
+    room.push(getRoomState(room));
+
+    if (isDepartureDateSuspicious) {
+      // add a warning flag for departures scheduled for before today's date and record them as 'stays' to be double checked manually
+      room.push('!!');
+    }
+  }
   return rooms;
 
   function getRoomState(room) {
-    const isUncleanedLeftoverRoom = room.includes('N');
-
     const dateString = room[2].split(' ')[1];
 
     const isRoomVacant =
-      room.includes('available') ||
       room.includes('volný') ||
       room.includes('volny') ||
       room.includes('v o l n ý');
 
-    if (isUncleanedLeftoverRoom || (dateString && isDeparture(dateString))) {
+    const isScheduledDeparture =
+      dateString && !isRoomVacant && isDeparture(dateString);
+
+    if (isScheduledDeparture) {
       return ROOM_STATES.DEPARTURE;
     }
-
     if (isRoomVacant) {
       return ROOM_STATES.VACANT;
     } else {
       return ROOM_STATES.STAY;
     }
-  }
 
-  function isDeparture(date) {
-    const [day, month] = date.split('.');
+    function isDeparture(date) {
+      const [day, month] = date.split('.');
 
-    const currentYear = new Date().getFullYear();
+      const currentYear = new Date().getFullYear();
 
-    // we check for the year-end edgecase
-    const year = isNextYear(month) ? currentYear + 1 : currentYear;
+      // we check for the year-end edgecase
+      const year = isNextYear(month) ? currentYear + 1 : currentYear;
 
-    const dateString = `${month}/${day}/${year}`;
-    const departureDate = new Date(dateString);
-    const currentDate = new Date();
+      const dateString = `${month}/${day}/${year}`;
+      const departureDate = new Date(dateString);
+      const currentDate = new Date();
 
-    const differenceInTime = departureDate.getTime() - currentDate.getTime();
-    const differenceInDays = Math.ceil(
-      differenceInTime / (1000 * 60 * 60 * 24)
-    );
+      const differenceInTime = departureDate.getTime() - currentDate.getTime();
+      const differenceInDays = Math.ceil(
+        differenceInTime / (1000 * 60 * 60 * 24)
+      );
 
-    return differenceInDays < 0
-      ? alertOnceForSuspiciousDate()
-      : 0 <= differenceInDays < 2;
+      if (differenceInDays < 0) {
+        isDepartureDateSuspicious = true;
+        alertOnceForSuspiciousDate();
+      } else {
+        return 0 <= differenceInDays && differenceInDays < 2;
+      }
 
-    function isNextYear(month) {
-      const currentMonthIndex = new Date().getMonth();
-      // JS Date months are zero indexed
-      const monthIndex = month * 1 - 1;
-      return !!(currentMonthIndex === 11 && monthIndex === 0);
+      function isNextYear(month) {
+        const currentMonthIndex = new Date().getMonth();
+        // JS Date months are zero indexed
+        const monthIndex = month * 1 - 1;
+        return !!(currentMonthIndex === 11 && monthIndex === 0);
+      }
     }
   }
 }
-
 function alertOnceForSuspiciousDate() {
   alert(
-    'Double check your input. Departure dates are earlier than current date. They will be recorded as "stays."'
+    'Double check your input. Some departure dates are listed as before today\'s date. They will be recorded as "stays" and include a warning mark in the last column.'
   );
   // eslint-disable-next-line no-func-assign
   alertOnceForSuspiciousDate = () => false;
-}
-
-export function validateRoomsData(roomsData) {
-  return roomsData.every((cell) => cell.length === 5);
 }

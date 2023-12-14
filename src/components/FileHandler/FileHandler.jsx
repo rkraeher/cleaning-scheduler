@@ -5,7 +5,6 @@ import {
   addAvailabilityStatusToRooms,
   convertToJson,
   parseRows,
-  validateRoomsData,
 } from './importUtils';
 import * as S from './FileHandler.styles';
 import { ProgressBar } from '../ProgressBar/ProgressBar';
@@ -51,13 +50,6 @@ export function FileHandler() {
 
     const jsonData = await convertToJson(file);
     const roomsData = addAvailabilityStatusToRooms(parseRows(jsonData));
-
-    // TODO change alert to a UI embedded warning
-    if (!validateRoomsData(roomsData)) {
-      alert(
-        'Careful! Your input data is missing some expected data. Script results may be inaccurate.'
-      );
-    }
 
     const { roomsListA, roomsListB, allRoomsList } =
       getBalancedRoomLists(roomsData);
