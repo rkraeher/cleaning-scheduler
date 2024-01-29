@@ -46,6 +46,7 @@ export function FileHandler() {
   }
 
   const importFile = async (e) => {
+    // how to enable another file upload without manual refresh?
     const file = e.target.files[0];
 
     const jsonData = await convertToJson(file);

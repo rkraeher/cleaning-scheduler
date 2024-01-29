@@ -83,7 +83,7 @@ export function addAvailabilityStatusToRooms(rooms = []) {
   return rooms;
 
   function getRoomState(room) {
-    const dateString = room[2].split(' ')[1];
+    const dateString = room[2]?.split(' ')[1];
 
     const isRoomVacant =
       room.includes('volný') ||
@@ -123,6 +123,7 @@ export function addAvailabilityStatusToRooms(rooms = []) {
         isDepartureDateSuspicious = true;
         alertOnceForSuspiciousDate();
       } else {
+        // domain-specific note: less than 2 days indicates that the room is a 'departure'
         return 0 <= differenceInDays && differenceInDays < 2;
       }
 
